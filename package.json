@@ -1,0 +1,13 @@
+{
+  "name": "jotapol-go",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Links cortos por post y tablero de alcance (go.jotapol.com).",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "ADMIN_TOKEN=dev-token-local-123 node --watch server.js",
+    "test": "node --test"
+  }
+}
