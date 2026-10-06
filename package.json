@@ -1,9 +1,9 @@
 {
-  "name": "jotapol-go",
+  "name": "taplog",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Links cortos por post y tablero de alcance (go.jotapol.com).",
+  "description": "Taplog: links cortos por post y tablero de alcance (jotapol.com/r).",
   "engines": { "node": ">=24" },
   "scripts": {
     "start": "node server.js",

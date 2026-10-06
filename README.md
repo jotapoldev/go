@@ -1,12 +1,16 @@
-# jotapol-go
+# Taplog
 
 Links cortos por post (`jotapol.com/r/09`) y un tablero para saber qué post o reel trae gente.
 
+**Demo pública (datos de ejemplo, solo lectura):** [jotapol.com/r/demo](https://jotapol.com/r/demo)
+
 - **Redirección:** `/<código>` manda al destino y cuenta el clic. Las previsualizaciones de links y los bots no cuentan.
 - **Privacidad:** de cada clic se guarda solo el día, la hora (UTC), el origen (Instagram, TikTok, LinkedIn… según el navegador que lo abre o el referer) y si fue celular o computadora. Nunca IP ni datos de la persona.
-- **Tablero (`/admin`):** clics por post, últimos 14 días, de dónde vienen, dispositivo, y las métricas de Instagram que anotás a mano (alcance, guardados, compartidos, me gusta, comentarios) con el porcentaje clic/alcance.
+- **Tablero (`/admin`, con clave):** clics por post, últimos 14 días, de dónde vienen, dispositivo, y las métricas de Instagram que anotás a mano (alcance, guardados, compartidos, me gusta, comentarios) con el porcentaje clic/alcance.
 
-Node 24 sin dependencias: `node:sqlite` guarda todo en `DATA_DIR/go.db`.
+- **Demo (`/demo`):** el mismo tablero con datos inventados, para mostrarlo sin exponer los reales.
+
+Node 24 sin dependencias: `node:sqlite` guarda todo en `DATA_DIR/go.db`. `views.js` dibuja el tablero (sin librerías, gráficas en SVG, modo claro y oscuro) y `demo.js` genera los datos de ejemplo.
 
 ## Correr en local
 
