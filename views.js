@@ -36,16 +36,18 @@ const STYLE = `
   --display:"Bricolage Grotesque",system-ui,sans-serif;--body:"Geist",system-ui,sans-serif;
   --ink:#F3F1FF;--muted:#B9B5DA;--faint:#8C87B5;
   --win:rgba(22,18,52,.34);--pane:rgba(255,255,255,.045);--row:rgba(255,255,255,.06);--edge:rgba(255,255,255,.2);--edge2:rgba(255,255,255,.07);
-  --blue:#5B7CFF;--menta:#5EEAD4;--good:#2BC48A;--bad:#F0566E;color-scheme:dark}
+  --blue:#5B7CFF;--menta:#5EEAD4;--good:#2BC48A;--bad:#F0566E;color-scheme:dark;
+  /* Fondo general: cambiar estos cuatro cambia el ambiente de todas las pantallas. */
+  --bg:#14051F;--bg-glow:255,20,147;--orb-a:#FF2EA6;--orb-b:#C2007A}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%}
 body{font:14px/1.5 var(--body);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;
-  background:radial-gradient(90% 70% at 0% 0%,rgba(59,47,214,.38) 0%,transparent 60%),radial-gradient(70% 60% at 100% 100%,rgba(91,47,214,.22) 0%,transparent 60%),
-    radial-gradient(60% 50% at 100% 0%,rgba(59,47,214,.18) 0%,transparent 60%),#0E0B2A;
+  background:radial-gradient(90% 70% at 0% 0%,rgba(var(--bg-glow),.55) 0%,transparent 60%),radial-gradient(70% 60% at 100% 100%,rgba(var(--bg-glow),.45) 0%,transparent 60%),
+    radial-gradient(60% 50% at 100% 0%,rgba(var(--bg-glow),.3) 0%,transparent 60%),var(--bg);
   background-attachment:fixed}
 /* Orbes detrás de la ventana: sin algo que difuminar, el vidrio se ve plano. */
 body::before,body::after{content:"";position:fixed;z-index:-1;border-radius:50%;filter:blur(8px);pointer-events:none}
-body::before{width:460px;height:460px;left:16%;top:10%;opacity:.7;background:radial-gradient(circle at 35% 35%,#6A5CF5,#3B2FD6 55%,transparent 72%);animation:drift 22s ease-in-out infinite alternate}
-body::after{width:400px;height:400px;right:10%;bottom:4%;opacity:.6;background:radial-gradient(circle at 40% 40%,#8A4FFF,#4B1FB0 55%,transparent 72%);animation:drift 26s ease-in-out infinite alternate-reverse}
+body::before{width:460px;height:460px;left:16%;top:10%;opacity:.8;background:radial-gradient(circle at 35% 35%,var(--orb-a),var(--orb-b) 55%,transparent 72%);animation:drift 22s ease-in-out infinite alternate}
+body::after{width:400px;height:400px;right:10%;bottom:4%;opacity:.7;background:radial-gradient(circle at 40% 40%,var(--orb-a),var(--orb-b) 55%,transparent 72%);animation:drift 26s ease-in-out infinite alternate-reverse}
 @keyframes drift{to{transform:translate(120px,80px) scale(1.15)}}
 @media (prefers-reduced-motion:reduce){body::before,body::after{animation:none}}
 .desk{padding:16px;min-height:100vh;display:flex;flex-direction:column;gap:16px}
