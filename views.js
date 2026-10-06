@@ -39,13 +39,13 @@ const STYLE = `
   --blue:#5B7CFF;--menta:#5EEAD4;--good:#2BC48A;--bad:#F0566E;color-scheme:dark}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%}
 body{font:14px/1.5 var(--body);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;
-  background:radial-gradient(90% 70% at 0% 0%,rgba(59,47,214,.38) 0%,transparent 60%),radial-gradient(70% 60% at 100% 100%,rgba(94,234,212,.10) 0%,transparent 60%),
+  background:radial-gradient(90% 70% at 0% 0%,rgba(59,47,214,.38) 0%,transparent 60%),radial-gradient(70% 60% at 100% 100%,rgba(91,47,214,.22) 0%,transparent 60%),
     radial-gradient(60% 50% at 100% 0%,rgba(59,47,214,.18) 0%,transparent 60%),#0E0B2A;
   background-attachment:fixed}
 /* Orbes detrás de la ventana: sin algo que difuminar, el vidrio se ve plano. */
 body::before,body::after{content:"";position:fixed;z-index:-1;border-radius:50%;filter:blur(8px);pointer-events:none}
-body::before{width:420px;height:420px;left:18%;top:12%;opacity:.55;background:radial-gradient(circle at 35% 35%,#6A5CF5,#3B2FD6 55%,transparent 72%);animation:drift 22s ease-in-out infinite alternate}
-body::after{width:340px;height:340px;right:12%;bottom:6%;opacity:.28;background:radial-gradient(circle at 40% 40%,#5EEAD4,#0E9F92 55%,transparent 72%);animation:drift 26s ease-in-out infinite alternate-reverse}
+body::before{width:460px;height:460px;left:16%;top:10%;opacity:.7;background:radial-gradient(circle at 35% 35%,#6A5CF5,#3B2FD6 55%,transparent 72%);animation:drift 22s ease-in-out infinite alternate}
+body::after{width:400px;height:400px;right:10%;bottom:4%;opacity:.6;background:radial-gradient(circle at 40% 40%,#8A4FFF,#4B1FB0 55%,transparent 72%);animation:drift 26s ease-in-out infinite alternate-reverse}
 @keyframes drift{to{transform:translate(120px,80px) scale(1.15)}}
 @media (prefers-reduced-motion:reduce){body::before,body::after{animation:none}}
 .desk{padding:16px;min-height:100vh;display:flex;flex-direction:column;gap:16px}
@@ -90,24 +90,28 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .seg a[aria-current=true]{background:rgba(255,255,255,.14);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .content{padding:20px 24px 28px;display:grid;gap:24px;align-content:start}
 
-.hero{position:relative;border-radius:14px;overflow:hidden;min-height:200px;padding:24px 26px;display:flex;flex-direction:column;justify-content:center;gap:6px;isolation:isolate;
-  background:linear-gradient(115deg,#1E1880 0%,#3B2FD6 42%,#2F4FD8 72%,#0E8F86 100%)}
+.hero{position:relative;border-radius:16px;overflow:hidden;min-height:210px;padding:26px 28px;display:flex;flex-direction:column;justify-content:center;gap:6px;isolation:isolate;border:1px solid rgba(255,255,255,.22);
+  background:linear-gradient(115deg,rgba(59,47,214,.55) 0%,rgba(47,79,216,.35) 60%,rgba(14,143,134,.30) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 24px 60px -28px rgba(20,10,80,.9)}
+.hero::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.02) 45%,rgba(255,255,255,.06));backdrop-filter:blur(22px) saturate(1.8);-webkit-backdrop-filter:blur(22px) saturate(1.8)}
+.hero>:not(.shape){position:relative;z-index:1}
 .hero .tag{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
 .hero .tag .mini{width:26px;height:26px;border-radius:7px;font-size:12px;border:1px solid rgba(255,255,255,.25)}
 .hero b.n{font:800 58px/1 var(--display);letter-spacing:-.045em;font-variant-numeric:tabular-nums}
 .hero p{margin:0;max-width:44ch;color:rgba(255,255,255,.85)}
 .hero .cta{margin-top:10px;align-self:flex-start;font:600 13px var(--body);color:#fff;background:#2F6BFF;border-radius:999px;min-height:34px;padding:0 18px;display:grid;place-items:center;text-decoration:none;box-shadow:0 8px 20px -8px rgba(47,107,255,.9)}
 .shape{position:absolute;z-index:-1;border-radius:50%}
-.s1{width:46px;height:46px;right:300px;top:26px;background:radial-gradient(circle at 30% 30%,#B9A8FF,#5B3FE0 60%,#2A1FB8)}
-.s2{width:22px;height:22px;right:200px;top:18px;background:radial-gradient(circle at 30% 30%,#E3D9FF,#7A5CFF)}
-.s3{width:34px;height:34px;right:330px;bottom:30px;border-radius:9px;transform:rotate(28deg);background:linear-gradient(135deg,#A7F5E8,#5EEAD4 60%,#0E9F92)}
-.s4{width:26px;height:26px;right:180px;bottom:50px;border-radius:7px;transform:rotate(-18deg);background:linear-gradient(135deg,#DCD8FF,#8C7BFF)}
-.s5{width:150px;height:150px;right:34px;top:24px;border-radius:38px;transform:rotate(-14deg);background:linear-gradient(145deg,rgba(255,255,255,.35),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(14px) saturate(1.6);-webkit-backdrop-filter:blur(14px) saturate(1.6);display:grid;place-items:center;box-shadow:0 30px 60px -20px rgba(20,10,80,.6),inset 0 1px 0 rgba(255,255,255,.55)}
+/* Figuras de color detrás del vidrio del banner: difuminadas para que se lean como luz a través del cristal. */
+.s1,.s2,.s3,.s4{filter:blur(16px);opacity:.9}
+.s1{width:150px;height:150px;right:250px;top:-30px;background:radial-gradient(circle at 30% 30%,#B9A8FF,#5B3FE0 60%,#2A1FB8)}
+.s2{width:90px;height:90px;right:150px;bottom:-30px;background:radial-gradient(circle at 30% 30%,#E3D9FF,#7A5CFF)}
+.s3{width:110px;height:110px;right:420px;bottom:-40px;border-radius:9px;transform:rotate(28deg);background:linear-gradient(135deg,#A7F5E8,#5EEAD4 60%,#0E9F92)}
+.s4{width:70px;height:70px;right:20px;top:-20px;border-radius:7px;transform:rotate(-18deg);background:linear-gradient(135deg,#DCD8FF,#8C7BFF)}
+.s5{width:150px;height:150px;right:40px;top:28px;z-index:1;border-radius:38px;transform:rotate(-14deg);background:linear-gradient(145deg,rgba(255,255,255,.4),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(10px) saturate(1.6);-webkit-backdrop-filter:blur(10px) saturate(1.6);display:grid;place-items:center;box-shadow:0 30px 60px -20px rgba(20,10,80,.7),inset 0 1px 0 rgba(255,255,255,.7)}
 .s5 svg{width:96px;height:96px;transform:rotate(14deg);filter:drop-shadow(0 10px 18px rgba(0,0,0,.35))}
 
 .sec{display:grid;gap:10px}.sec>h2{font:500 12.5px var(--body);color:var(--faint);margin:0}
-.box{border-radius:12px;border:1px solid var(--edge2);background:linear-gradient(145deg,rgba(255,255,255,.1),rgba(255,255,255,.025));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 12px 30px -18px rgba(0,0,0,.6);backdrop-filter:blur(14px) saturate(1.5);-webkit-backdrop-filter:blur(14px) saturate(1.5)}
+.box{position:relative;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.03) 55%,rgba(255,255,255,.06));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.32),inset 0 0 24px rgba(255,255,255,.04),0 18px 40px -20px rgba(0,0,0,.75);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8)}
 .list{overflow:hidden}
 .item{display:grid;grid-template-columns:30px minmax(0,1fr) 150px 70px 104px;align-items:center;gap:14px;padding:10px 14px;border-top:1px solid var(--edge2)}
 .item:first-child{border-top:0}
@@ -118,13 +122,13 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .pill{font:600 12.5px var(--body);color:var(--ink);text-decoration:none;border:1px solid rgba(255,255,255,.35);border-radius:999px;min-height:30px;padding:0 16px;display:grid;place-items:center;justify-self:end;white-space:nowrap}
 .pill:hover{background:var(--row)}.pill.solid{background:#2F6BFF;border-color:#2F6BFF}
 
-.chart{padding:14px 16px 8px}.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart{padding:14px 16px 8px;display:flex;align-items:center}.chart svg{width:100%;height:auto;display:block;overflow:visible}
 .chart text{font:11px var(--body);fill:var(--faint)}
 .hit:hover+.tip,.hit:focus+.tip{opacity:1}.tip{opacity:0;pointer-events:none;transition:opacity .15s}
 .tip rect{fill:var(--ink)}.tip text{fill:#120C3A;font-weight:600}
 
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-.duo{display:grid;gap:24px;align-items:start}.duo>.sec{min-width:0}
+.duo{display:grid;gap:24px;align-items:stretch}.duo>.sec{min-width:0;grid-template-rows:auto 1fr}
 @media (min-width:1400px){.duo{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.duo .split{grid-template-columns:minmax(0,1fr)}}
 .card{padding:16px;display:flex;flex-direction:column;gap:6px;min-height:140px}
 .card .t{display:flex;align-items:center;gap:10px;font-weight:600;min-width:0}.card .t span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
