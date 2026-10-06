@@ -41,15 +41,22 @@ const STYLE = `
   --bg:#14051F;--bg-glow:255,20,147;--orb-a:#FF2EA6;--orb-b:#C2007A}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%}
 body{font:14px/1.5 var(--body);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;
-  background:radial-gradient(90% 70% at 0% 0%,rgba(var(--bg-glow),.55) 0%,transparent 60%),radial-gradient(70% 60% at 100% 100%,rgba(var(--bg-glow),.45) 0%,transparent 60%),
-    radial-gradient(60% 50% at 100% 0%,rgba(var(--bg-glow),.3) 0%,transparent 60%),var(--bg);
+  background:var(--bg);
   background-attachment:fixed}
-/* Orbes detrás de la ventana: sin algo que difuminar, el vidrio se ve plano. */
-body::before,body::after{content:"";position:fixed;z-index:-1;border-radius:50%;filter:blur(8px);pointer-events:none}
-body::before{width:460px;height:460px;left:16%;top:10%;opacity:.8;background:radial-gradient(circle at 35% 35%,var(--orb-a),var(--orb-b) 55%,transparent 72%);animation:drift 22s ease-in-out infinite alternate}
-body::after{width:400px;height:400px;right:10%;bottom:4%;opacity:.7;background:radial-gradient(circle at 40% 40%,var(--orb-a),var(--orb-b) 55%,transparent 72%);animation:drift 26s ease-in-out infinite alternate-reverse}
-@keyframes drift{to{transform:translate(120px,80px) scale(1.15)}}
-@media (prefers-reduced-motion:reduce){body::before,body::after{animation:none}}
+/* Lámpara de lava: el fondo entero. Bolas que suben y bajan, charcos arriba y abajo; el filtro "goo" las funde
+   cuando se tocan. El vidrio de la ventana las difumina encima. */
+.lava{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;filter:url(#goo);
+  background:radial-gradient(120% 60% at 50% 110%,rgba(var(--bg-glow),.35),transparent 70%)}
+.lava i{position:absolute;left:var(--x);bottom:-30vmax;width:var(--s);height:var(--s);border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,var(--orb-a),var(--orb-b) 70%);
+  animation:lava var(--t) cubic-bezier(.45,0,.55,1) var(--d) infinite alternate}
+.lava::before,.lava::after{content:"";position:absolute;left:-10%;right:-10%;height:34vh;border-radius:50%;background:var(--orb-b)}
+.lava::before{bottom:-22vh}.lava::after{top:-26vh;height:28vh}
+@keyframes lava{
+  0%{transform:translateY(0) scale(1,1)}
+  45%{transform:translateY(calc(-60vh - 30vmax)) scale(.92,1.12)}
+  100%{transform:translateY(calc(-115vh - 30vmax)) scale(1.08,.94)}}
+@media (prefers-reduced-motion:reduce){.lava i{animation:none;transform:translateY(calc(-50vh - 30vmax))}}
 .desk{padding:16px;min-height:100vh;display:flex;flex-direction:column;gap:16px}
 .win{position:relative;border-radius:18px;background:var(--win);border:1px solid var(--edge);
   box-shadow:0 40px 100px -30px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.35),inset 1px 0 0 rgba(255,255,255,.12),inset 0 0 40px rgba(255,255,255,.04);
@@ -189,7 +196,7 @@ pre{margin:0;padding:14px 16px;overflow:auto;font:12.5px/1.6 ui-monospace,Consol
 
 export const page = (title, body) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
 <title>${esc(title)}</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,${encodeURIComponent(MARK.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '))}"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Geist:wght@400;500;600&display=swap"><style>${STYLE}</style></head>
-<body><div class="desk">${body}</div></body></html>`;
+<body><div class="lava" aria-hidden="true"><i style="--x:4%;--s:26vmax;--t:19s;--d:-3s"></i><i style="--x:30%;--s:18vmax;--t:23s;--d:-11s"></i><i style="--x:52%;--s:30vmax;--t:27s;--d:-6s"></i><i style="--x:74%;--s:20vmax;--t:21s;--d:-15s"></i><i style="--x:14%;--s:14vmax;--t:17s;--d:-9s"></i><i style="--x:62%;--s:12vmax;--t:15s;--d:-2s"></i><i style="--x:86%;--s:24vmax;--t:25s;--d:-19s"></i></div><svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="18"/><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -10"/></filter></svg><div class="desk">${body}</div></body></html>`;
 
 /** Curva suave (Catmull-Rom a Bézier) para que la línea no se vea en picos. */
 function smooth(pts) {
