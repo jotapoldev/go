@@ -1,6 +1,6 @@
 // Arma lo que muestra el tablero a partir de agregados (de la base o de la demo). Sin I/O: se prueba en model.test.js.
 
-/** Sitios que Taplog acepta y muestra. id corto, dominio, color e iniciales del ícono. */
+/** Sitios de jotapol (la cuenta dueña). Se siembran en la tabla `sites`; la demo los usa tal cual. */
 export const SITES = [
   { id: "web", name: "jotapol.com", host: "jotapol.com", note: "Portafolio del estudio", color: "#3B2FD6", ini: "Jp" },
   { id: "shiplog", name: "Shiplog", host: "shiplog.jotapol.com", note: "shiplog.jotapol.com", color: "#0E9F92", ini: "Sl" },
@@ -27,15 +27,18 @@ export function trend(now, prev) {
  * raw: { daily: [{site, day, n}], pages: [{site, path, n}], pageDaily: [{site, path, day, n}],
  *        sources: [{site, source, n}], devices: [{site, device, n}] }
  * period: días a mirar (1, 7 o 30). site: id para ver un solo sitio, o null para todos.
+ * sites: los sitios de la cuenta; lo de otros sitios en `raw` se ignora.
  */
-export function model(raw, { today, period = 7, site = null }) {
+export function model(raw, { today, period = 7, site = null, sites: list = SITES }) {
   const days = lastDays(today, period), prevDays = lastDays(addDays(today, -period), period);
   const days30 = lastDays(today, 30), days14 = lastDays(today, 14);
-  const inSite = (r) => !site || r.site === site;
+  const ids = new Set(list.map((s) => s.id)), byId = (id) => list.find((s) => s.id === id);
+  if (site && !ids.has(site)) site = null;
+  const inSite = (r) => ids.has(r.site) && (!site || r.site === site);
   const dayMap = new Map(raw.daily.map((r) => [`${r.site}|${r.day}`, r.n]));
   const count = (id, ds) => sum(ds.map((d) => dayMap.get(`${id}|${d}`) ?? 0));
 
-  const sites = SITES.map((s) => {
+  const sites = list.map((s) => {
     const visits = count(s.id, days), prev = count(s.id, prevDays);
     return { ...s, visits, prev, trend: trend(visits, prev), spark: days14.map((d) => dayMap.get(`${s.id}|${d}`) ?? 0) };
   });
@@ -45,7 +48,7 @@ export function model(raw, { today, period = 7, site = null }) {
 
   const pd = new Map(raw.pageDaily.map((r) => [`${r.site}|${r.path}|${r.day}`, r.n]));
   const pages = raw.pages.filter(inSite).sort((a, b) => b.n - a.n).slice(0, site ? 8 : 6)
-    .map((p) => ({ ...p, site: siteById(p.site), spark: days14.map((d) => pd.get(`${p.site}|${p.path}|${d}`) ?? 0) }));
+    .map((p) => ({ ...p, site: byId(p.site), spark: days14.map((d) => pd.get(`${p.site}|${p.path}|${d}`) ?? 0) }));
 
   const bySource = new Map();
   for (const r of raw.sources.filter(inSite)) bySource.set(r.source, (bySource.get(r.source) ?? 0) + r.n);
@@ -56,7 +59,7 @@ export function model(raw, { today, period = 7, site = null }) {
   const devices = [...byDevice].map(([device, n]) => ({ device, n })).sort((a, b) => b.n - a.n);
 
   return {
-    period, site: site ? siteById(site) : null, sites, total, prev,
+    period, site: site ? byId(site) : null, sites, total, prev,
     delta: prev ? Math.round(((total - prev) / prev) * 100) : null,
     days30, series30, pages, sources, entries, devices,
     topSource: sources[0] ? { ...sources[0], share: entries ? sources[0].n / entries : 0 } : null,

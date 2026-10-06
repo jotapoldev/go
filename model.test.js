@@ -32,3 +32,20 @@ test("model: suma por período, compara con el anterior y filtra por sitio", () 
   assert.deepEqual(web.pages.map((p) => p.path), ["/"]);
   assert.equal(web.entries, 12);
 });
+
+test("model: un cliente solo ve sus sitios", () => {
+  const raw = {
+    daily: [{ site: "web", day: "2026-10-06", n: 10 }, { site: "c1", day: "2026-10-06", n: 4 }],
+    pages: [{ site: "web", path: "/", n: 10 }, { site: "c1", path: "/tienda", n: 4 }],
+    pageDaily: [],
+    sources: [{ site: "web", source: "instagram", n: 9 }, { site: "c1", source: "google", n: 4 }],
+    devices: [{ site: "web", device: "celular", n: 10 }, { site: "c1", device: "computadora", n: 4 }],
+  };
+  const sites = [{ id: "c1", name: "Tienda", host: "tienda.com" }];
+  const d = model(raw, { today: "2026-10-06", period: 7, sites });
+  assert.equal(d.total, 4);
+  assert.deepEqual(d.pages.map((p) => p.path), ["/tienda"]);
+  assert.deepEqual(d.sources.map((s) => s.source), ["google"]);
+  assert.deepEqual(d.devices.map((s) => s.device), ["computadora"]);
+  assert.equal(model(raw, { today: "2026-10-06", site: "web", sites }).site, null);
+});

@@ -2,8 +2,6 @@
 // Estética de escritorio: una ventana de vidrio oscuro sobre un fondo con los colores de la marca.
 // Adentro: menú lateral (sitios y orígenes), pestañas, banner con el número del período, sitios, páginas y orígenes.
 
-import { SITES } from "./model.js";
-
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const fmt = (n) => (n == null ? "–" : Number(n).toLocaleString("es"));
 const pct = (a, b) => (b ? `${((a / b) * 100).toFixed(1)} %` : "–");
@@ -149,7 +147,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .mix{display:flex;height:6px;border-radius:99px;overflow:hidden;gap:2px;background:rgba(255,255,255,.06)}
 form.row{display:flex;flex-wrap:wrap;gap:12px;align-items:end;padding:16px}
 label{display:grid;gap:6px;font-size:12.5px;color:var(--muted)}
-input{font:inherit;color:var(--ink);background:rgba(255,255,255,.07);border:1px solid var(--edge);border-radius:10px;padding:8px 12px;min-height:40px;min-width:0}
+input,select{font:inherit;color:var(--ink);background:rgba(255,255,255,.07);border:1px solid var(--edge);border-radius:10px;padding:8px 12px;min-height:40px;min-width:0}
 input::placeholder{color:var(--faint)}
 .btn{font:600 13.5px var(--body);min-height:40px;padding:0 20px;border-radius:999px;border:0;background:#2F6BFF;color:#fff;cursor:pointer}
 .btn[disabled],input[disabled]{opacity:.5;cursor:not-allowed}
@@ -235,7 +233,7 @@ function headline(d) {
  * El tablero. `d` sale de model(); `links` es la lista de links cortos.
  * tab: "resumen" | "links" | "ajustes". Con `demo` todo queda de solo lectura.
  */
-export function dashboard(d, { base = "", host = "", demo = false, tab = "resumen", links = [] } = {}) {
+export function dashboard(d, { base = "", host = "", demo = false, owner = false, tab = "resumen", links = [], sites = [], accounts = [] } = {}) {
   const root = base + (demo ? "/demo" : "/admin");
   const href = (o = {}) => {
     const p = new URLSearchParams();
@@ -255,16 +253,16 @@ export function dashboard(d, { base = "", host = "", demo = false, tab = "resume
     <h4>Sitios</h4>
     ${d.sites.map((s) => `<a href="${href({ site: s.id })}"${cur(resumen && d.site?.id === s.id)}>${mini(s)}${esc(s.name)}<span class="count">${fmt(s.visits)}</span></a>`).join("")}
     ${d.sources.length ? `<h4>De dónde vienen</h4>${d.sources.slice(0, 5).map((s) => `<span class="src">${icon(s.source)}${esc(srcName(s.source))}<span class="count">${fmt(s.n)}</span></span>`).join("")}` : ""}
-    <h4>Links cortos</h4>
-    <a href="${href({ tab: "links" })}"${cur(tab === "links")}>${icon("links")}Links por post</a>
+    ${owner ? `<h4>Links cortos</h4>
+    <a href="${href({ tab: "links" })}"${cur(tab === "links")}>${icon("links")}Links por post</a>` : ""}
   </nav>`;
 
   const bar = `<div class="bar">
-    <nav class="tabs" aria-label="Secciones"><a href="${href({ tab: "resumen", site: d.site?.id ?? null })}"${cur(resumen)}>Resumen</a><a href="${href({ tab: "links" })}"${cur(tab === "links")}>Links</a><a href="${href({ tab: "ajustes" })}"${cur(tab === "ajustes")}>Ajustes</a></nav>
+    <nav class="tabs" aria-label="Secciones"><a href="${href({ tab: "resumen", site: d.site?.id ?? null })}"${cur(resumen)}>Resumen</a>${owner ? `<a href="${href({ tab: "links" })}"${cur(tab === "links")}>Links</a>` : ""}<a href="${href({ tab: "ajustes" })}"${cur(tab === "ajustes")}>Ajustes</a></nav>
     ${demo ? '<span class="chip">Demo con datos de ejemplo</span>' : `<form method="post" action="${esc(base)}/admin/logout"><button class="out" type="submit">Salir</button></form>`}
   </div>`;
 
-  const body = resumen ? resumenView(d, href) : tab === "links" ? linksView(links, { base, host, demo }) : ajustesView({ base, host });
+  const body = resumen ? resumenView(d, href) : tab === "links" ? linksView(links, { base, host, demo }) : ajustesView({ base, host, sites, owner, demo, accounts });
   return page(demo ? "Taplog, demo" : "Taplog", `<div class="win">${side}<div class="main">${bar}${body}</div></div>
     ${demo ? `<div class="note box" style="backdrop-filter:blur(20px)"><span>Los números de esta demo son inventados. Taplog es uno de los proyectos de jotapol.</span><a href="https://jotapol.com" target="_blank" rel="noreferrer">Ver jotapol.com</a></div>` : ""}`);
 }
@@ -337,14 +335,36 @@ function linksView(links, { base, host, demo }) {
 /** Fragmento que va en el <head> de cada sitio. Avisa una vez por página (también al navegar sin recargar). */
 export const snippet = (siteId, endpoint) => `<script>(()=>{let l;const h=()=>{const p=location.pathname;if(p===l)return;const r=l?location.origin+"/":document.referrer,q=l?"":location.search;l=p;navigator.sendBeacon("${endpoint}",JSON.stringify({s:"${siteId}",p,r,q}))},w=history.pushState;history.pushState=function(){w.apply(this,arguments);h()};addEventListener("popstate",h);h()})()</script>`;
 
-function ajustesView({ base, host }) {
+function ajustesView({ base, host, sites, owner, demo, accounts }) {
   const endpoint = `https://${host}${base}/hit`;
+  const off = demo ? " disabled" : "";
+  const addSite = `<section class="sec"><h2>Agregar un sitio</h2><form class="box row" method="post" action="${esc(base)}/admin/sites">
+      <label>Nombre<input name="name" required maxlength="60" placeholder="Tienda" style="width:180px"${off}></label>
+      <label style="flex:1;min-width:220px">Dominio<input name="host" required placeholder="tienda.com"${off}></label>
+      ${owner && accounts.length ? `<label>Cuenta<select name="account"${off}><option value="">jotapol</option>${accounts.map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join("")}</select></label>` : ""}
+      <button class="btn" type="submit"${off}>Agregar sitio</button></form></section>`;
+  const clients = owner && !demo ? `<section class="sec"><h2>Clientes</h2>
+      ${accounts.length ? `<div class="box list">${accounts.map((a) => `<div class="item"><span class="mini" style="background:var(--blue)">${esc(a.name.slice(0, 2))}</span><div><b>${esc(a.name)}</b><small>desde ${esc(a.created_at.slice(0, 10))}</small></div><span class="state">${a.sites} ${a.sites === 1 ? "sitio" : "sitios"}</span><span></span><span></span></div>`).join("")}</div>` : '<div class="box empty">Todavía no hay clientes.</div>'}
+      <form class="box row" method="post" action="${esc(base)}/admin/clients">
+        <label style="flex:1;min-width:220px">Nombre del cliente<input name="name" required maxlength="80" placeholder="Tienda La Ceiba"></label>
+        <button class="btn" type="submit">Crear cuenta</button></form>
+      <p class="hint">Al crearla te mostramos su clave una sola vez. Pasásela al cliente: con ella entra a ${esc(host + base)}/admin y agrega sus sitios.</p></section>` : "";
   return `<div class="sub"><h1>Ajustes</h1></div><div class="content">
-    <p class="hint" style="max-width:70ch">Cada sitio lleva este fragmento en el &lt;head&gt;. Avisa qué página se abrió y desde dónde llegó la persona; no guarda IP ni nada que la identifique. Si el sitio tiene política de seguridad de contenido, agregá ${esc(`https://${host}`)} a connect-src.</p>
-    ${SITES.map((s) => `<section class="snip"><h3>${mini(s)}${esc(s.name)}</h3><pre class="box">${esc(snippet(s.id, endpoint))}</pre></section>`).join("")}
-    <p class="hint">Para saber qué post trajo la visita, agregá ?utm_source=post-09 al link del post. Ese nombre aparece tal cual en "De dónde vienen".</p>
+    <p class="hint" style="max-width:70ch">Cada sitio lleva este fragmento en el &lt;head&gt;. Avisa qué página se abrió y desde dónde llegó la persona; no guarda IP, cookies ni nada que la identifique. Si el sitio tiene política de seguridad de contenido, agregá ${esc(`https://${host}`)} a connect-src.</p>
+    ${sites.length ? sites.map((s) => `<section class="snip"><h3>${mini(s)}${esc(s.name)} <small class="hint">${esc(s.host)}</small></h3><pre class="box">${esc(snippet(s.id, endpoint))}</pre></section>`).join("") : '<div class="box empty">Agregá tu primer sitio abajo y te damos el fragmento para pegar.</div>'}
+    ${addSite}
+    <p class="hint">Para saber qué campaña o post trajo la visita, agregá ?utm_source=post-09 al link. Ese nombre aparece tal cual en "De dónde vienen".</p>
+    ${clients}
   </div>`;
 }
+
+/** Clave nueva de un cliente: se muestra una sola vez. */
+export const tokenShown = (base, name, token) => page("Clave de " + name, `<section class="win" style="max-width:560px;margin:14vh auto 0;display:block;min-height:0;padding:30px">
+  <div class="brand" style="padding:0 0 18px">${MARK}Taplog</div>
+  <p style="margin:0 0 12px">Cuenta creada para <b>${esc(name)}</b>. Esta es su clave:</p>
+  <pre class="box" style="padding:14px;user-select:all;white-space:pre-wrap;word-break:break-all;margin:0 0 12px">${esc(token)}</pre>
+  <p class="hint" style="margin:0 0 18px">Copiala ahora: no se vuelve a mostrar y no la guardamos (solo su huella). Si se pierde, creá otra cuenta.</p>
+  <a class="btn" style="display:inline-grid;place-items:center;text-decoration:none" href="${esc(base)}/admin?tab=ajustes">Listo, ya la copié</a></section>`);
 
 export const login = (base, msg = "") => page("Entrar a Taplog", `<section class="win" style="max-width:400px;margin:14vh auto 0;display:block;min-height:0;padding:30px">
   <div class="brand" style="padding:0 0 18px">${MARK}Taplog</div>

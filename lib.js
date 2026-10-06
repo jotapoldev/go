@@ -48,3 +48,14 @@ export function visitSource(ua = "", referer = "", search = "", siteHost = "") {
   if (host && siteHost && host === siteHost) return "interno";
   return source(ua, referer);
 }
+
+/** Dominio de un sitio cliente: se acepta pegado con https:// o con ruta; devuelve solo el host en minúsculas, o "" si no sirve. */
+export function cleanHost(v = "") {
+  let h = String(v).trim().toLowerCase();
+  try { if (/^https?:\/\//.test(h)) h = new URL(h).hostname; } catch { return ""; }
+  h = h.replace(/\/.*$/, "").replace(/^www\./, "");
+  return /^(?=.{3,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(h) ? h : "";
+}
+
+/** El Origin del navegador vale para el sitio si es su dominio o el mismo con www. */
+export const originMatches = (origin, host) => origin === host || origin === "www." + host;

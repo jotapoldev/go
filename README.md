@@ -12,6 +12,15 @@ Links cortos por post (`jotapol.com/r/09`) y un tablero para saber qué post o r
 
 Node 24 sin dependencias: `node:sqlite` guarda todo en `DATA_DIR/go.db`. `views.js` dibuja el tablero (sin librerías, gráficas en SVG, modo claro y oscuro) y `demo.js` genera los datos de ejemplo.
 
+## Clientes
+
+Taplog sirve a varias cuentas desde la misma instalación:
+
+- **Dueña (jotapol):** entra con `ADMIN_TOKEN`. Ve sus sitios y sus links, y en **Ajustes** crea cuentas de clientes y les agrega sitios.
+- **Cliente:** recibe una clave `tl_...` que se muestra una sola vez (solo se guarda su hash). Con ella entra a `/admin`, agrega sus dominios y copia el fragmento de cada sitio. Solo ve los datos de sus sitios.
+- Las visitas solo cuentan si el `Origin` del navegador es el dominio del sitio (o el mismo con `www.`).
+- Todavía no hay cobro ni límites por plan.
+
 ## Correr en local
 
 ```

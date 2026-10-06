@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { device, isBot, source, validCode, validTarget, visitSource } from "./lib.js";
+import { cleanHost, device, isBot, originMatches, source, validCode, validTarget, visitSource } from "./lib.js";
 
 const IG = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 341.0.0.25.97";
 const TT = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/124 Mobile Safari/537.36 trill_340 BytedanceWebview/d8a21c6 musical_ly_2023";
@@ -36,4 +36,13 @@ test("visitSource: utm manda, navegación interna aparte, Google por referer", (
   assert.equal(visitSource("Mozilla/5.0 Chrome", "https://jotapol.com/", "", "jotapol.com"), "interno");
   assert.equal(visitSource("Mozilla/5.0 Chrome", "https://www.google.com/", "", "jotapol.com"), "google");
   assert.equal(visitSource(IG, "", "", "shiplog.jotapol.com"), "instagram");
+});
+
+test("cleanHost y originMatches: dominio de un cliente", () => {
+  assert.equal(cleanHost("https://www.Tienda.com/inicio"), "tienda.com");
+  assert.equal(cleanHost("blog.tienda.com.sv"), "blog.tienda.com.sv");
+  assert.equal(cleanHost("localhost"), "");
+  assert.equal(cleanHost("no es un dominio"), "");
+  assert.ok(originMatches("www.tienda.com", "tienda.com"));
+  assert.ok(!originMatches("tienda.com.evil.io", "tienda.com"));
 });
