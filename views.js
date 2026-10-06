@@ -122,10 +122,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .pill{font:600 12.5px var(--body);color:var(--ink);text-decoration:none;border:1px solid rgba(255,255,255,.35);border-radius:999px;min-height:30px;padding:0 16px;display:grid;place-items:center;justify-self:end;white-space:nowrap}
 .pill:hover{background:var(--row)}.pill.solid{background:#2F6BFF;border-color:#2F6BFF}
 
-.chart{padding:14px 16px 8px;display:flex;align-items:center}.chart svg{width:100%;height:auto;display:block;overflow:visible}
-.chart text{font:11px var(--body);fill:var(--faint)}
-.hit:hover+.tip,.hit:focus+.tip{opacity:1}.tip{opacity:0;pointer-events:none;transition:opacity .15s}
-.tip rect{fill:var(--ink)}.tip text{fill:#120C3A;font-weight:600}
+.chart{padding:22px 16px 8px;display:flex;flex-direction:column;gap:8px;min-height:240px}
+.plot{position:relative;flex:1;min-height:160px}.plot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ticks{position:relative;height:16px}.ticks span{position:absolute;transform:translateX(-50%);font-size:11px;color:var(--faint);white-space:nowrap}.ticks .s{transform:none}.ticks .e{transform:translateX(-100%)}
+.col{position:absolute;top:0;bottom:0;outline:0}.col:focus-visible{background:rgba(255,255,255,.06);border-radius:6px}
+.col::before{content:"";position:absolute;left:50%;top:9%;bottom:0;border-left:1px dashed var(--faint)}
+.col .dot{position:absolute;left:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--menta);border:2px solid #120C3A}
+.col.first .dot,.col.first::before{left:0}.col.last .dot,.col.last::before{left:100%}
+.col .tipx{position:absolute;top:-16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#120C3A;font:600 11px var(--body);padding:4px 10px;border-radius:99px;white-space:nowrap;pointer-events:none;z-index:2}
+.col .tipx.s{left:0;transform:none}.col .tipx.e{left:auto;right:0;transform:none}
+.col::before,.col>*{opacity:0;transition:opacity .15s}.col:hover::before,.col:hover>*,.col:focus-visible::before,.col:focus-visible>*{opacity:1}
 
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .duo{display:grid;gap:24px;align-items:stretch}.duo>.sec{min-width:0;grid-template-rows:auto 1fr}
@@ -176,7 +182,7 @@ pre{margin:0;padding:14px 16px;overflow:auto;font:12.5px/1.6 ui-monospace,Consol
 }
 @media (max-width:700px){.item{grid-template-columns:30px minmax(0,1fr) auto auto;gap:10px}.item .state{display:none}.pill{padding:0 12px}.card{min-height:0}
   .link{grid-template-columns:minmax(0,1fr) auto}.link .mix{grid-column:1/-1;grid-row:2}.link .rate{display:none}}
-@media (max-width:640px){.shape{display:none}.hero b.n{font-size:44px}.chart text{font-size:22px}.chip{display:none}}
+@media (max-width:640px){.shape{display:none}.hero b.n{font-size:44px}.chip{display:none}}
 `;
 
 export const page = (title, body) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
@@ -194,25 +200,29 @@ function smooth(pts) {
   return d;
 }
 
+/**
+ * Gráfica de 30 días que llena el alto de su tarjeta: la curva es un SVG que se estira (sin deformar el trazo)
+ * y las fechas, el punto y la etiqueta de cada día van en HTML para que no se deformen.
+ */
 function chart(days, values) {
-  const W = 1000, H = 200, T = 20, B = 30, n = days.length, base = H - B;
+  const W = 1000, H = 200, T = 18, n = days.length;
   const max = Math.max(4, ...values) * 1.12;
-  const x = (i) => 6 + (i * (W - 12)) / (n - 1), y = (v) => Math.min(T + (base - T) * (1 - v / max), base);
+  const x = (i) => (i * W) / (n - 1), y = (v) => T + (H - T) * (1 - v / max);
   const pts = values.map((v, i) => [x(i), y(v)]), path = smooth(pts);
-  const ticks = days.map((d, i) => ((i % 7 === 0 && n - 1 - i >= 4) || i === n - 1 ? `<text x="${x(i)}" y="${H - 6}" text-anchor="${i === 0 ? "start" : i === n - 1 ? "end" : "middle"}">${dayLabel(d)}</text>` : "")).join("");
-  const w = (W - 12) / (n - 1);
-  const hits = days.map((d, i) => {
-    const tx = Math.min(Math.max(x(i) - 66, 0), W - 132);
-    return `<rect class="hit" x="${(x(i) - w / 2).toFixed(1)}" y="0" width="${w.toFixed(1)}" height="${base}" fill="transparent" tabindex="0" aria-label="${dayLabel(d)}: ${values[i]} visitas"/>
-      <g class="tip"><line x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${base}" stroke="var(--faint)" stroke-dasharray="3 4"/><circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="5" fill="var(--menta)" stroke="#120C3A" stroke-width="2"/><rect x="${tx}" y="-10" width="132" height="26" rx="13"/><text x="${tx + 66}" y="7" text-anchor="middle">${dayLabel(d)}, ${values[i]} visitas</text></g>`;
-  }).join("");
+  const pct = (v, total) => `${((v / total) * 100).toFixed(2)}%`;
+  const edge = (i) => (i < 3 ? " s" : i > n - 4 ? " e" : "");
+  const w = W / (n - 1);
+  const ticks = days.map((d, i) => ((i % 7 === 0 && n - 1 - i >= 4) || i === n - 1 ? `<span class="${i === 0 ? "s" : i === n - 1 ? "e" : ""}" style="left:${pct(x(i), W)}">${dayLabel(d)}</span>` : "")).join("");
+  const cols = days.map((d, i) => `<div class="col${i === 0 ? " first" : i === n - 1 ? " last" : ""}" tabindex="0" style="left:${pct(Math.max(0, x(i) - w / 2), W)};width:${pct(i === 0 || i === n - 1 ? w / 2 : w, W)}" aria-label="${dayLabel(d)}: ${values[i]} visitas">
+      <i class="dot" style="top:${pct(pts[i][1], H)}"></i><span class="tipx${edge(i)}">${dayLabel(d)}, ${values[i]} visitas</span></div>`).join("");
   const peak = values.indexOf(Math.max(...values));
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Visitas por día en los últimos ${n} días; el máximo fue ${values[peak]} el ${dayLabel(days[peak])}">
+  return `<div class="plot" role="group" aria-label="Visitas por día en los últimos ${n} días; el máximo fue ${values[peak]} el ${dayLabel(days[peak])}">
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
     <defs><linearGradient id="ar" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5EEAD4" stop-opacity=".3"/><stop offset="1" stop-color="#5EEAD4" stop-opacity="0"/></linearGradient></defs>
-    <line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="rgba(255,255,255,.08)"/>
-    <path d="${path} L${x(n - 1)},${base} L${x(0)},${base} Z" fill="url(#ar)"/>
-    <path d="${path}" fill="none" stroke="var(--menta)" stroke-width="2.5" stroke-linecap="round"/>
-    ${ticks}${hits}</svg>`;
+    <line x1="0" x2="${W}" y1="${H}" y2="${H}" stroke="rgba(255,255,255,.08)" vector-effect="non-scaling-stroke"/>
+    <path d="${path} L${W},${H} L0,${H} Z" fill="url(#ar)"/>
+    <path d="${path}" fill="none" stroke="var(--menta)" stroke-width="2.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+    ${cols}</div><div class="ticks" aria-hidden="true">${ticks}</div>`;
 }
 
 function spark(values) {
