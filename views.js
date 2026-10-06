@@ -54,6 +54,12 @@ body::after{width:360px;height:360px;right:12%;bottom:6%;background:radial-gradi
   backdrop-filter:blur(28px) saturate(2) brightness(1.05);-webkit-backdrop-filter:blur(28px) saturate(2) brightness(1.05);overflow:hidden;display:grid;grid-template-columns:240px minmax(0,1fr);flex:1}
 .win::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;
   background:linear-gradient(135deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 32%,rgba(255,255,255,0) 70%,rgba(255,255,255,.06) 100%)}
+/* Tarjeta suelta (login, avisos): no se estira como la ventana del tablero, queda centrada. */
+.win.solo{flex:none;display:block;min-height:0;width:100%;margin:auto;padding:32px}
+.login .brand{padding:0 0 22px}.login h1{font:800 28px/1.1 var(--display);letter-spacing:-.03em;margin:0 0 6px}.login>.hint{margin:0 0 22px}
+.login form{display:grid;gap:14px}.login input{width:100%}
+.login .err{margin:0 0 16px;padding:10px 12px;border-radius:10px;background:rgba(240,86,110,.14);border:1px solid rgba(240,86,110,.35);color:#FFD3DA;font-size:13px}
+.login .foot{margin:22px 0 0;padding-top:18px;border-top:1px solid var(--edge2);color:var(--faint);font-size:13px}.login .foot a{color:var(--menta)}
 a{color:inherit}
 a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px solid var(--menta);outline-offset:2px}
 
@@ -359,17 +365,19 @@ function ajustesView({ base, host, sites, owner, demo, accounts }) {
 }
 
 /** Clave nueva de un cliente: se muestra una sola vez. */
-export const tokenShown = (base, name, token) => page("Clave de " + name, `<section class="win" style="max-width:560px;margin:14vh auto 0;display:block;min-height:0;padding:30px">
+export const tokenShown = (base, name, token) => page("Clave de " + name, `<section class="win solo" style="max-width:560px">
   <div class="brand" style="padding:0 0 18px">${MARK}Taplog</div>
   <p style="margin:0 0 12px">Cuenta creada para <b>${esc(name)}</b>. Esta es su clave:</p>
   <pre class="box" style="padding:14px;user-select:all;white-space:pre-wrap;word-break:break-all;margin:0 0 12px">${esc(token)}</pre>
   <p class="hint" style="margin:0 0 18px">Copiala ahora: no se vuelve a mostrar y no la guardamos (solo su huella). Si se pierde, creá otra cuenta.</p>
   <a class="btn" style="display:inline-grid;place-items:center;text-decoration:none" href="${esc(base)}/admin?tab=ajustes">Listo, ya la copié</a></section>`);
 
-export const login = (base, msg = "") => page("Entrar a Taplog", `<section class="win" style="max-width:400px;margin:14vh auto 0;display:block;min-height:0;padding:30px">
-  <div class="brand" style="padding:0 0 18px">${MARK}Taplog</div>
-  ${msg ? `<p style="color:var(--bad);margin:0 0 14px">${esc(msg)}</p>` : '<p class="hint" style="margin:0 0 14px">Entrá con la clave del tablero.</p>'}
-  <form method="post" action="${esc(base)}/admin/login" style="display:grid;gap:14px"><label>Clave<input name="token" type="password" required autocomplete="current-password"></label><button class="btn" type="submit">Entrar</button></form>
-  <p class="hint" style="margin:18px 0 0">¿Solo querés ver cómo funciona? <a href="${esc(base)}/demo" style="color:var(--menta)">Abrí la demo</a>.</p></section>`);
+export const login = (base, msg = "") => page("Entrar a Taplog", `<section class="win solo login" style="max-width:420px">
+  <div class="brand">${MARK}Taplog</div>
+  <h1>Entrá a tu tablero</h1>
+  <p class="hint">Visitas de tus sitios, sin cookies ni datos de las personas.</p>
+  ${msg ? `<p class="err" role="alert">${esc(msg)}</p>` : ""}
+  <form method="post" action="${esc(base)}/admin/login"><label>Clave de tu cuenta<input name="token" type="password" required minlength="12" placeholder="tl_…" autocomplete="current-password" autofocus${msg ? ' aria-invalid="true"' : ""}></label><button class="btn" type="submit">Entrar</button></form>
+  <p class="foot">¿Solo querés ver cómo funciona? <a href="${esc(base)}/demo">Abrí la demo</a></p></section>`);
 
-export const notFound = (home) => page("Este link no existe", `<section class="win" style="max-width:520px;margin:20vh auto 0;display:block;min-height:0;padding:30px;text-align:center"><h1 style="font:800 30px var(--display);letter-spacing:-.03em;margin:0 0 10px">Este link no existe.</h1><p style="margin:0;color:var(--muted)">Revisá que esté bien escrito o andá a <a href="${esc(home)}" style="color:var(--menta)">${esc(home.replace(/^https?:\/\//, ""))}</a>.</p></section>`);
+export const notFound = (home) => page("Este link no existe", `<section class="win solo" style="max-width:520px;text-align:center"><h1 style="font:800 30px var(--display);letter-spacing:-.03em;margin:0 0 10px">Este link no existe.</h1><p style="margin:0;color:var(--muted)">Revisá que esté bien escrito o andá a <a href="${esc(home)}" style="color:var(--menta)">${esc(home.replace(/^https?:\/\//, ""))}</a>.</p></section>`);

@@ -115,7 +115,7 @@ const initials = (name) => {
 };
 const form = (req) => new Promise((ok) => { let b = ""; req.on("data", (d) => { b += d; if (b.length > 1e4) req.destroy(); }); req.on("end", () => ok(Object.fromEntries(new URLSearchParams(b)))); });
 const int = (v) => (v === "" || v == null || isNaN(Number(v)) ? null : Math.max(0, Math.round(Number(v))));
-const oops = (msg, tab = "links") => page("Error en Taplog", `<section class="win" style="max-width:520px;margin:16vh auto 0;display:block;min-height:0;padding:28px"><p style="margin:0 0 16px">${msg}</p><a class="btn" style="display:inline-grid;place-items:center;text-decoration:none" href="${P("/admin?tab=" + tab)}">Volver</a></section>`);
+const oops = (msg, tab = "links") => page("Error en Taplog", `<section class="win solo" style="max-width:520px"><p style="margin:0 0 16px">${msg}</p><a class="btn" style="display:inline-grid;place-items:center;text-decoration:none" href="${P("/admin?tab=" + tab)}">Volver</a></section>`);
 const COOKIE = (v, age) => `t=${v}; Path=${BASE || "/"}; Max-Age=${age}; HttpOnly; Secure; SameSite=Strict`;
 /** Opciones del tablero en la URL: ?site=web&p=30&tab=links. */
 const view = (url, sites) => {
