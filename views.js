@@ -31,26 +31,37 @@ const mini = (s, cls = "mini") => `<span class="${cls}" style="background:${s.co
 // El Gancho de jotapol: el logo dentro del banner y, chico, en el menú.
 const GANCHO = (fill = "#fff") => `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 8 H26 V38 C26 44.6 31.4 50 38 50 H56 V56 H38 C28.1 56 20 47.9 20 38 V14 H8 Z" fill="${fill}"/><path d="M34 8 H44 C51.7 8 56 12.3 56 20 C56 27.7 51.7 32 44 32 H34 Z" fill="#5EEAD4"/></svg>`;
 
+// Logo propio de Taplog (dedo que toca + punto menta); el Gancho queda como firma de jotapol en el banner.
+const MARK = `<svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="mk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B4FF0"/><stop offset="1" stop-color="#3B2FD6"/></linearGradient></defs><rect width="32" height="32" rx="10" fill="url(#mk)"/><path d="M11 8v11a5 5 0 0 0 10 0v-3" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="21" cy="12" r="2.6" fill="#5EEAD4"/></svg>`;
 const STYLE = `
 :root{
   --display:"Bricolage Grotesque",system-ui,sans-serif;--body:"Geist",system-ui,sans-serif;
   --ink:#F3F1FF;--muted:#B9B5DA;--faint:#8C87B5;
-  --win:rgba(22,18,52,.62);--pane:rgba(255,255,255,.045);--row:rgba(255,255,255,.05);--edge:rgba(255,255,255,.12);--edge2:rgba(255,255,255,.07);
+  --win:rgba(22,18,52,.34);--pane:rgba(255,255,255,.045);--row:rgba(255,255,255,.06);--edge:rgba(255,255,255,.2);--edge2:rgba(255,255,255,.07);
   --blue:#5B7CFF;--menta:#5EEAD4;--good:#2BC48A;--bad:#F0566E;color-scheme:dark}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%}
 body{font:14px/1.5 var(--body);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;
   background:radial-gradient(120% 90% at 0% 0%,#2B3BD9 0%,transparent 55%),radial-gradient(90% 80% at 100% 10%,#7A2BC9 0%,transparent 55%),
     radial-gradient(80% 70% at 85% 100%,#C2306E 0%,transparent 60%),radial-gradient(70% 60% at 10% 100%,#0E7E86 0%,transparent 60%),#120C3A;
   background-attachment:fixed}
+/* Orbes detrás de la ventana: sin algo que difuminar, el vidrio se ve plano. */
+body::before,body::after{content:"";position:fixed;z-index:-1;border-radius:50%;filter:blur(8px);pointer-events:none}
+body::before{width:420px;height:420px;left:18%;top:12%;background:radial-gradient(circle at 35% 35%,#7FA0FF,#3B2FD6 55%,transparent 72%);animation:drift 22s ease-in-out infinite alternate}
+body::after{width:360px;height:360px;right:12%;bottom:6%;background:radial-gradient(circle at 40% 40%,#FF9AC4,#C2306E 55%,transparent 72%);animation:drift 26s ease-in-out infinite alternate-reverse}
+@keyframes drift{to{transform:translate(120px,80px) scale(1.15)}}
+@media (prefers-reduced-motion:reduce){body::before,body::after{animation:none}}
 .desk{padding:16px;min-height:100vh;display:flex;flex-direction:column;gap:16px}
-.win{border-radius:18px;background:var(--win);border:1px solid var(--edge);box-shadow:0 40px 100px -30px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.08);
-  backdrop-filter:blur(40px) saturate(1.6);-webkit-backdrop-filter:blur(40px) saturate(1.6);overflow:hidden;display:grid;grid-template-columns:240px minmax(0,1fr);flex:1}
+.win{position:relative;border-radius:18px;background:var(--win);border:1px solid var(--edge);
+  box-shadow:0 40px 100px -30px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.35),inset 1px 0 0 rgba(255,255,255,.12),inset 0 0 40px rgba(255,255,255,.04);
+  backdrop-filter:blur(28px) saturate(2) brightness(1.05);-webkit-backdrop-filter:blur(28px) saturate(2) brightness(1.05);overflow:hidden;display:grid;grid-template-columns:240px minmax(0,1fr);flex:1}
+.win::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;
+  background:linear-gradient(135deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 32%,rgba(255,255,255,0) 70%,rgba(255,255,255,.06) 100%)}
 a{color:inherit}
 a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px solid var(--menta);outline-offset:2px}
 
 .side{padding:16px 12px 20px;background:var(--pane);border-right:1px solid var(--edge2);display:flex;flex-direction:column;gap:2px}
 .brand{display:flex;align-items:center;gap:9px;font:800 19px var(--display);letter-spacing:-.03em;text-decoration:none;padding:2px 8px 10px}
-.brand svg{width:24px;height:24px}
+.brand svg{width:28px;height:28px;filter:drop-shadow(0 6px 14px rgba(59,47,214,.55))}
 .side h4{font:500 11.5px var(--body);color:var(--faint);margin:14px 8px 4px}
 .side a,.side .src{display:flex;align-items:center;gap:10px;color:var(--muted);text-decoration:none;font-size:13.5px;min-height:34px;padding:0 8px;border-radius:8px}
 .side a:hover{color:var(--ink);background:var(--row)}
@@ -87,11 +98,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .s2{width:22px;height:22px;right:200px;top:18px;background:radial-gradient(circle at 30% 30%,#E3D9FF,#7A5CFF)}
 .s3{width:34px;height:34px;right:330px;bottom:30px;border-radius:9px;transform:rotate(28deg);background:linear-gradient(135deg,#FF8FB8,#E0568F 60%,#A3236A)}
 .s4{width:26px;height:26px;right:180px;bottom:50px;border-radius:7px;transform:rotate(-18deg);background:linear-gradient(135deg,#FFB27A,#E0568F)}
-.s5{width:150px;height:150px;right:34px;top:24px;border-radius:38px;transform:rotate(-14deg);background:linear-gradient(145deg,rgba(255,255,255,.35),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(6px);display:grid;place-items:center;box-shadow:0 30px 60px -20px rgba(20,10,80,.6)}
+.s5{width:150px;height:150px;right:34px;top:24px;border-radius:38px;transform:rotate(-14deg);background:linear-gradient(145deg,rgba(255,255,255,.35),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(14px) saturate(1.6);-webkit-backdrop-filter:blur(14px) saturate(1.6);display:grid;place-items:center;box-shadow:0 30px 60px -20px rgba(20,10,80,.6),inset 0 1px 0 rgba(255,255,255,.55)}
 .s5 svg{width:96px;height:96px;transform:rotate(14deg);filter:drop-shadow(0 10px 18px rgba(0,0,0,.35))}
 
 .sec{display:grid;gap:10px}.sec>h2{font:500 12.5px var(--body);color:var(--faint);margin:0}
-.box{border-radius:12px;border:1px solid var(--edge2);background:var(--row)}
+.box{border-radius:12px;border:1px solid var(--edge2);background:linear-gradient(145deg,rgba(255,255,255,.1),rgba(255,255,255,.025));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 12px 30px -18px rgba(0,0,0,.6);backdrop-filter:blur(14px) saturate(1.5);-webkit-backdrop-filter:blur(14px) saturate(1.5)}
 .list{overflow:hidden}
 .item{display:grid;grid-template-columns:30px minmax(0,1fr) 150px 70px 104px;align-items:center;gap:14px;padding:10px 14px;border-top:1px solid var(--edge2)}
 .item:first-child{border-top:0}
@@ -160,7 +172,7 @@ pre{margin:0;padding:14px 16px;overflow:auto;font:12.5px/1.6 ui-monospace,Consol
 `;
 
 export const page = (title, body) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
-<title>${esc(title)}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Geist:wght@400;500;600&display=swap"><style>${STYLE}</style></head>
+<title>${esc(title)}</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,${encodeURIComponent(MARK.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '))}"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Geist:wght@400;500;600&display=swap"><style>${STYLE}</style></head>
 <body><div class="desk">${body}</div></body></html>`;
 
 /** Curva suave (Catmull-Rom a Bézier) para que la línea no se vea en picos. */
@@ -237,7 +249,7 @@ export function dashboard(d, { base = "", host = "", demo = false, tab = "resume
   const resumen = tab === "resumen";
 
   const side = `<nav class="side" aria-label="Menú">
-    <a class="brand" href="${href({ site: null })}">${GANCHO()}Taplog</a>
+    <a class="brand" href="${href({ site: null })}">${MARK}Taplog</a>
     <h4>Resumen</h4>
     <a href="${href({ site: null })}"${cur(resumen && !d.site)}>${icon("grid")}Todos los sitios</a>
     <h4>Sitios</h4>
@@ -335,7 +347,7 @@ function ajustesView({ base, host }) {
 }
 
 export const login = (base, msg = "") => page("Entrar a Taplog", `<section class="win" style="max-width:400px;margin:14vh auto 0;display:block;min-height:0;padding:30px">
-  <div class="brand" style="padding:0 0 18px">${GANCHO()}Taplog</div>
+  <div class="brand" style="padding:0 0 18px">${MARK}Taplog</div>
   ${msg ? `<p style="color:var(--bad);margin:0 0 14px">${esc(msg)}</p>` : '<p class="hint" style="margin:0 0 14px">Entrá con la clave del tablero.</p>'}
   <form method="post" action="${esc(base)}/admin/login" style="display:grid;gap:14px"><label>Clave<input name="token" type="password" required autocomplete="current-password"></label><button class="btn" type="submit">Entrar</button></form>
   <p class="hint" style="margin:18px 0 0">¿Solo querés ver cómo funciona? <a href="${esc(base)}/demo" style="color:var(--menta)">Abrí la demo</a>.</p></section>`);
