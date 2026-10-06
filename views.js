@@ -38,7 +38,7 @@ const STYLE = `
   --win:rgba(22,18,52,.34);--pane:rgba(255,255,255,.045);--row:rgba(255,255,255,.06);--edge:rgba(255,255,255,.2);--edge2:rgba(255,255,255,.07);
   --blue:#5B7CFF;--menta:#5EEAD4;--good:#2BC48A;--bad:#F0566E;color-scheme:dark;
   /* Fondo general: cambiar estos cuatro cambia el ambiente de todas las pantallas. */
-  --bg:#14051F;--bg-glow:255,20,147;--orb-a:#FF2EA6;--orb-b:#C2007A}
+  --bg:#0F0A24;--bg-glow:168,52,140;--orb-a:#D6479A;--orb-b:#4A2BB0}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%}
 body{font:14px/1.5 var(--body);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;
   background:var(--bg);
@@ -47,16 +47,16 @@ body{font:14px/1.5 var(--body);color:var(--ink);-webkit-font-smoothing:antialias
    cuando se tocan. El vidrio de la ventana las difumina encima. */
 .lava{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;filter:url(#goo);
   background:radial-gradient(120% 60% at 50% 110%,rgba(var(--bg-glow),.35),transparent 70%)}
-.lava i{position:absolute;left:var(--x);bottom:-30vmax;width:var(--s);height:var(--s);border-radius:50%;
+.lava i{position:absolute;left:var(--x);bottom:-16vmax;width:var(--s);height:var(--s);border-radius:50%;
   background:radial-gradient(circle at 35% 30%,var(--orb-a),var(--orb-b) 70%);
   animation:lava var(--t) cubic-bezier(.45,0,.55,1) var(--d) infinite alternate}
-.lava::before,.lava::after{content:"";position:absolute;left:-10%;right:-10%;height:34vh;border-radius:50%;background:var(--orb-b)}
-.lava::before{bottom:-22vh}.lava::after{top:-26vh;height:28vh}
+.lava::before,.lava::after{content:"";position:absolute;left:-10%;right:-10%;height:22vh;border-radius:50%;background:var(--orb-b)}
+.lava::before{bottom:-15vh}.lava::after{top:-17vh;height:18vh}
 @keyframes lava{
   0%{transform:translateY(0) scale(1,1)}
-  45%{transform:translateY(calc(-60vh - 30vmax)) scale(.92,1.12)}
-  100%{transform:translateY(calc(-115vh - 30vmax)) scale(1.08,.94)}}
-@media (prefers-reduced-motion:reduce){.lava i{animation:none;transform:translateY(calc(-50vh - 30vmax))}}
+  45%{transform:translateY(calc(-60vh - 16vmax)) scale(.92,1.12)}
+  100%{transform:translateY(calc(-115vh - 16vmax)) scale(1.08,.94)}}
+@media (prefers-reduced-motion:reduce){.lava i{animation:none;transform:translateY(calc(-50vh - 16vmax))}}
 .desk{padding:16px;min-height:100vh;display:flex;flex-direction:column;gap:16px}
 .win{position:relative;border-radius:18px;background:var(--win);border:1px solid var(--edge);
   box-shadow:0 40px 100px -30px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.35),inset 1px 0 0 rgba(255,255,255,.12),inset 0 0 40px rgba(255,255,255,.04);
@@ -100,7 +100,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .content{padding:20px 24px 28px;display:grid;gap:24px;align-content:start}
 
 .hero{position:relative;border-radius:16px;overflow:hidden;min-height:210px;padding:26px 28px;display:flex;flex-direction:column;justify-content:center;gap:6px;isolation:isolate;border:1px solid rgba(255,255,255,.22);
-  background:linear-gradient(115deg,rgba(59,47,214,.55) 0%,rgba(47,79,216,.35) 60%,rgba(14,143,134,.30) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 24px 60px -28px rgba(20,10,80,.9)}
+  background:linear-gradient(115deg,rgba(74,43,176,.6) 0%,rgba(120,48,170,.42) 55%,rgba(214,71,154,.4) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 24px 60px -28px rgba(20,10,60,.9)}
 .hero::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.02) 45%,rgba(255,255,255,.06));backdrop-filter:blur(22px) saturate(1.8);-webkit-backdrop-filter:blur(22px) saturate(1.8)}
 .hero>:not(.shape){position:relative;z-index:1}
 .hero .tag{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
@@ -111,10 +111,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .shape{position:absolute;z-index:-1;border-radius:50%}
 /* Figuras de color detrás del vidrio del banner: difuminadas para que se lean como luz a través del cristal. */
 .s1,.s2,.s3,.s4{filter:blur(16px);opacity:.9}
-.s1{width:150px;height:150px;right:250px;top:-30px;background:radial-gradient(circle at 30% 30%,#B9A8FF,#5B3FE0 60%,#2A1FB8)}
-.s2{width:90px;height:90px;right:150px;bottom:-30px;background:radial-gradient(circle at 30% 30%,#E3D9FF,#7A5CFF)}
-.s3{width:110px;height:110px;right:420px;bottom:-40px;border-radius:9px;transform:rotate(28deg);background:linear-gradient(135deg,#A7F5E8,#5EEAD4 60%,#0E9F92)}
-.s4{width:70px;height:70px;right:20px;top:-20px;border-radius:7px;transform:rotate(-18deg);background:linear-gradient(135deg,#DCD8FF,#8C7BFF)}
+.s1{width:150px;height:150px;right:250px;top:-30px;background:radial-gradient(circle at 30% 30%,#F08BC4,var(--orb-a) 60%,#8A2A78)}
+.s2{width:90px;height:90px;right:150px;bottom:-30px;background:radial-gradient(circle at 30% 30%,#E3D9FF,#8C6BFF)}
+.s3{width:110px;height:110px;right:420px;bottom:-40px;border-radius:9px;transform:rotate(28deg);background:linear-gradient(135deg,#B9A8FF,#6A4FE0 60%,var(--orb-b))}
+.s4{width:70px;height:70px;right:20px;top:-20px;border-radius:7px;transform:rotate(-18deg);background:linear-gradient(135deg,#FFC2E2,var(--orb-a))}
 .s5{width:150px;height:150px;right:40px;top:28px;z-index:1;border-radius:38px;transform:rotate(-14deg);background:linear-gradient(145deg,rgba(255,255,255,.4),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(10px) saturate(1.6);-webkit-backdrop-filter:blur(10px) saturate(1.6);display:grid;place-items:center;box-shadow:0 30px 60px -20px rgba(20,10,80,.7),inset 0 1px 0 rgba(255,255,255,.7)}
 .s5 svg{width:96px;height:96px;transform:rotate(14deg);filter:drop-shadow(0 10px 18px rgba(0,0,0,.35))}
 
@@ -196,7 +196,7 @@ pre{margin:0;padding:14px 16px;overflow:auto;font:12.5px/1.6 ui-monospace,Consol
 
 export const page = (title, body) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
 <title>${esc(title)}</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,${encodeURIComponent(MARK.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '))}"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Geist:wght@400;500;600&display=swap"><style>${STYLE}</style></head>
-<body><div class="lava" aria-hidden="true"><i style="--x:4%;--s:26vmax;--t:19s;--d:-3s"></i><i style="--x:30%;--s:18vmax;--t:23s;--d:-11s"></i><i style="--x:52%;--s:30vmax;--t:27s;--d:-6s"></i><i style="--x:74%;--s:20vmax;--t:21s;--d:-15s"></i><i style="--x:14%;--s:14vmax;--t:17s;--d:-9s"></i><i style="--x:62%;--s:12vmax;--t:15s;--d:-2s"></i><i style="--x:86%;--s:24vmax;--t:25s;--d:-19s"></i></div><svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="18"/><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -10"/></filter></svg><div class="desk">${body}</div></body></html>`;
+<body><div class="lava" aria-hidden="true"><i style="--x:4%;--s:13vmax;--t:19s;--d:-3s"></i><i style="--x:30%;--s:9vmax;--t:23s;--d:-11s"></i><i style="--x:52%;--s:15vmax;--t:27s;--d:-6s"></i><i style="--x:74%;--s:10vmax;--t:21s;--d:-15s"></i><i style="--x:14%;--s:7vmax;--t:17s;--d:-9s"></i><i style="--x:62%;--s:6vmax;--t:15s;--d:-2s"></i><i style="--x:86%;--s:12vmax;--t:25s;--d:-19s"></i></div><svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="12"/><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter></svg><div class="desk">${body}</div></body></html>`;
 
 /** Curva suave (Catmull-Rom a Bézier) para que la línea no se vea en picos. */
 function smooth(pts) {
