@@ -13,7 +13,7 @@ export function demoData(now = new Date()) {
   const rows = POSTS.map((p) => {
     const r = rnd(p.code);
     // Pico el día que sale el post (hace `start` días) y cola que baja; ruido pequeño.
-    const series = days.map((_, i) => { const t = 29 - p.start; const k = i - t; return k < 0 ? 0 : Math.round(p.peak * Math.exp(-k / 4) + r() * 2); });
+    const series = days.map((_, i) => { const t = 29 - p.start; const k = i - t; return k < 0 ? 0 : Math.round(p.peak * Math.exp(-k / 4) + 1 + r() * (k < 6 ? 2 : 1)); });
     const clicks = series.reduce((a, b) => a + b, 0);
     // El último origen se lleva el resto, así la suma siempre da el total.
     const entries = Object.entries(p.mix);

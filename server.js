@@ -70,7 +70,7 @@ const same = (a, b) => { const x = Buffer.from(a), y = Buffer.from(b); return x.
 const authed = (req) => TOKEN.length >= 12 && same(decodeURIComponent(cookie(req, "t") ?? ""), TOKEN);
 const form = (req) => new Promise((ok) => { let b = ""; req.on("data", (d) => { b += d; if (b.length > 1e4) req.destroy(); }); req.on("end", () => ok(Object.fromEntries(new URLSearchParams(b)))); });
 const int = (v) => (v === "" || v == null || isNaN(Number(v)) ? null : Math.max(0, Math.round(Number(v))));
-const oops = (msg) => page("Error · Taplog", `<section class="card" style="max-width:520px;margin:16vh auto 0"><p style="margin:0 0 12px">${msg}</p><a class="ghost" href="${P("/admin")}">Volver al tablero</a></section>`);
+const oops = (msg) => page("Error · Taplog", `<section class="panel glass" style="max-width:520px;margin:16vh auto 0"><p style="margin:0 0 14px">${msg}</p><a class="btn-ghost glass" style="display:inline-flex;align-items:center;text-decoration:none" href="${P("/admin")}">Volver al tablero</a></section>`);
 const COOKIE = (v, age) => `t=${v}; Path=${BASE || "/"}; Max-Age=${age}; HttpOnly; Secure; SameSite=Strict`;
 
 createServer(async (req, res) => {
