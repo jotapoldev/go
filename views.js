@@ -1,249 +1,339 @@
-// Vista del tablero de Taplog. Recibe datos ya calculados (de la base o de la demo) y devuelve HTML.
-// Estética: "agua de noche" (resplandores que se mueven apenas) y paneles de vidrio esmerilado.
-// Lo memorable es un solo panel: la pregunta, el número de la semana y el hilo de luz de los clics.
+// Vista del tablero de Taplog. Recibe datos ya calculados (model.js) y devuelve HTML.
+// Estética de escritorio: una ventana de vidrio oscuro sobre un fondo con los colores de la marca.
+// Adentro: menú lateral (sitios y orígenes), pestañas, banner con el número del período, sitios, páginas y orígenes.
+
+import { SITES } from "./model.js";
 
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const fmt = (n) => (n == null ? "–" : Number(n).toLocaleString("es"));
 const pct = (a, b) => (b ? `${((a / b) * 100).toFixed(1)} %` : "–");
 const dayLabel = (d) => new Date(d + "T12:00:00Z").toLocaleDateString("es", { day: "numeric", month: "short", timeZone: "UTC" });
 
-// Color fijo por red (validado en claro y oscuro); el resto va en gris.
-const SOURCE_SLOT = { instagram: 1, tiktok: 2, linkedin: 3, x: 4, directo: 5 };
-const srcVar = (s) => (SOURCE_SLOT[s] ? `var(--s${SOURCE_SLOT[s]})` : "var(--s-other)");
-const SOURCE_NAME = { instagram: "Instagram", tiktok: "TikTok", linkedin: "LinkedIn", x: "X", directo: "Directo", facebook: "Facebook", whatsapp: "WhatsApp", github: "GitHub" };
+// Color fijo por origen (no cambia con el ranking); el resto va en gris.
+const SOURCE_COLOR = { instagram: "#E0568F", github: "#9A93FF", directo: "#5EEAD4", google: "#F2B33D", linkedin: "#4E8DF5", tiktok: "#2BC4C4", facebook: "#6C8CFF", x: "#C9C6E6" };
+const srcColor = (s) => SOURCE_COLOR[s] ?? "#7D78A8";
+const SOURCE_NAME = { instagram: "Instagram", tiktok: "TikTok", linkedin: "LinkedIn", x: "X", directo: "Directo", facebook: "Facebook", whatsapp: "WhatsApp", github: "GitHub", google: "Google" };
 const srcName = (s) => SOURCE_NAME[s] ?? s;
+
+const ICON = {
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  instagram: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6"/>',
+  linkedin: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/>',
+  github: '<path d="M9 19c-4 1.5-4-2-6-2.5m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1-.3-3.4 1.3a11.6 11.6 0 0 0-6 0C6.8 2.4 5.8 2.7 5.8 2.7a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4.4 9c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>',
+  directo: '<path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-.5.5M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l.5-.5"/>',
+  google: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  other: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  links: '<path d="M4 7h16M4 12h10M4 17h7"/>',
+};
+const icon = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k] ?? ICON.other}</svg>`;
+const mini = (s, cls = "mini") => `<span class="${cls}" style="background:${s.color}" aria-hidden="true">${s.ini}</span>`;
+
+// El Gancho de jotapol: el logo dentro del banner y, chico, en el menú.
+const GANCHO = (fill = "#fff") => `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 8 H26 V38 C26 44.6 31.4 50 38 50 H56 V56 H38 C28.1 56 20 47.9 20 38 V14 H8 Z" fill="${fill}"/><path d="M34 8 H44 C51.7 8 56 12.3 56 20 C56 27.7 51.7 32 44 32 H34 Z" fill="#5EEAD4"/></svg>`;
 
 const STYLE = `
 :root{
-  --ink:#191541;--muted:#5B5875;--faint:#8A87A3;
-  --base:#E9EAFF;--blob1:rgba(59,47,214,.30);--blob2:rgba(94,234,212,.45);--blob3:rgba(194,69,143,.16);
-  --glass:rgba(255,255,255,.52);--glass-strong:rgba(255,255,255,.72);--edge:rgba(255,255,255,.85);--edge-soft:rgba(25,21,65,.08);
-  --shadow:0 20px 50px -24px rgba(59,47,214,.45);
-  --accent:#3B2FD6;--line:#3B2FD6;--line2:#0E9F92;--good:#0F9D6B;--bad:#D6364A;--track:rgba(25,21,65,.08);
-  --s1:#3B2FD6;--s2:#0E9F92;--s3:#E0731F;--s4:#C2458F;--s5:#A87F00;--s-other:#8A87A3;color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
-  --ink:#F1EFFF;--muted:#B3AFD3;--faint:#8984B0;
-  --base:#07051C;--blob1:rgba(59,47,214,.55);--blob2:rgba(94,234,212,.20);--blob3:rgba(194,69,143,.18);
-  --glass:rgba(255,255,255,.055);--glass-strong:rgba(255,255,255,.09);--edge:rgba(255,255,255,.16);--edge-soft:rgba(255,255,255,.07);
-  --shadow:0 30px 70px -30px rgba(0,0,0,.8);
-  --accent:#9A93FF;--line:#5EEAD4;--line2:#7B72FF;--good:#2BC48A;--bad:#F0566E;--track:rgba(255,255,255,.08);
-  --s1:#7B72FF;--s2:#1FA394;--s3:#DB7429;--s4:#CC5596;--s5:#A9830F;--s-other:#6E6A92;color-scheme:dark}}
+  --display:"Bricolage Grotesque",system-ui,sans-serif;--body:"Geist",system-ui,sans-serif;
+  --ink:#F3F1FF;--muted:#B9B5DA;--faint:#8C87B5;
+  --win:rgba(22,18,52,.62);--pane:rgba(255,255,255,.045);--row:rgba(255,255,255,.05);--edge:rgba(255,255,255,.12);--edge2:rgba(255,255,255,.07);
+  --blue:#5B7CFF;--menta:#5EEAD4;--good:#2BC48A;--bad:#F0566E;color-scheme:dark}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%}
-body{background:var(--base);color:var(--ink);font:15px/1.55 "Geist",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-.sea{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
-.sea i{position:absolute;border-radius:50%;filter:blur(70px);will-change:transform}
-.sea i:nth-child(1){width:62vmax;height:62vmax;left:-18vmax;top:-26vmax;background:var(--blob1);animation:drift 26s ease-in-out infinite alternate}
-.sea i:nth-child(2){width:48vmax;height:48vmax;right:-14vmax;top:30vh;background:var(--blob2);animation:drift 32s ease-in-out infinite alternate-reverse}
-.sea i:nth-child(3){width:40vmax;height:40vmax;left:20vw;bottom:-22vmax;background:var(--blob3);animation:drift 38s ease-in-out infinite alternate}
-@keyframes drift{to{transform:translate(4vmax,3vmax) scale(1.06)}}
-@media (prefers-reduced-motion:reduce){.sea i{animation:none}}
-.glass{background:var(--glass);border:1px solid var(--edge-soft);box-shadow:inset 0 1px 0 var(--edge),var(--shadow);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4)}
-.wrap{max-width:1160px;margin:0 auto;padding-inline:20px;padding-block:0 80px;display:grid;gap:20px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:22px 6px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:10px;font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:800;font-size:23px;letter-spacing:-.035em;color:var(--ink);text-decoration:none}
-.brand svg{width:32px;height:32px;filter:drop-shadow(0 6px 14px rgba(59,47,214,.45))}
-.chip{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;padding:8px 14px;border-radius:999px;color:var(--muted)}
-.chip b{width:7px;height:7px;border-radius:50%;background:var(--line);box-shadow:0 0 10px var(--line)}
-.btn-ghost{font:500 14px "Geist",system-ui,sans-serif;color:var(--muted);border-radius:999px;min-height:40px;padding:0 16px;cursor:pointer}
-.btn-ghost:hover{color:var(--ink)}
+body{font:14px/1.5 var(--body);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  background:radial-gradient(120% 90% at 0% 0%,#2B3BD9 0%,transparent 55%),radial-gradient(90% 80% at 100% 10%,#7A2BC9 0%,transparent 55%),
+    radial-gradient(80% 70% at 85% 100%,#C2306E 0%,transparent 60%),radial-gradient(70% 60% at 10% 100%,#0E7E86 0%,transparent 60%),#120C3A;
+  background-attachment:fixed}
+.desk{max-width:1200px;margin:0 auto;padding:28px 16px 48px}
+.win{border-radius:18px;background:var(--win);border:1px solid var(--edge);box-shadow:0 40px 100px -30px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter:blur(40px) saturate(1.6);-webkit-backdrop-filter:blur(40px) saturate(1.6);overflow:hidden;display:grid;grid-template-columns:224px minmax(0,1fr);min-height:720px}
+a{color:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px solid var(--menta);outline-offset:2px}
 
-.hero{border-radius:32px;padding:30px 30px 18px;display:grid;gap:8px;position:relative;overflow:hidden}
-.hero-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
-h1{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:700;font-size:clamp(30px,4.2vw,48px);letter-spacing:-.04em;line-height:1;margin:0;max-width:13ch;text-wrap:balance}
-.lede{color:var(--muted);margin:10px 0 0;max-width:42ch}
-.big{text-align:right}
-.big .n{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:800;font-size:clamp(64px,9vw,112px);letter-spacing:-.06em;line-height:.9;font-variant-numeric:tabular-nums}
-.big .u{color:var(--muted);font-size:15px}
-.delta{font-weight:600;font-size:14px}.delta.up{color:var(--good)}.delta.down{color:var(--bad)}.delta.flat{color:var(--faint)}
-.chart svg{width:100%;height:auto;display:block;overflow:visible}.chart text{font:11px "Geist",system-ui,sans-serif;fill:var(--faint)}
-@media (max-width:640px){.chart text{font-size:22px}.big{text-align:left}}
+.side{padding:16px 12px 20px;background:var(--pane);border-right:1px solid var(--edge2);display:flex;flex-direction:column;gap:2px}
+.brand{display:flex;align-items:center;gap:9px;font:800 19px var(--display);letter-spacing:-.03em;text-decoration:none;padding:2px 8px 10px}
+.brand svg{width:24px;height:24px}
+.side h4{font:500 11.5px var(--body);color:var(--faint);margin:14px 8px 4px}
+.side a,.side .src{display:flex;align-items:center;gap:10px;color:var(--muted);text-decoration:none;font-size:13.5px;min-height:34px;padding:0 8px;border-radius:8px}
+.side a:hover{color:var(--ink);background:var(--row)}
+.side a[aria-current=page]{background:rgba(255,255,255,.1);color:var(--ink)}
+.side .count{margin-left:auto;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+.side svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mini{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;font:700 9.5px var(--body);color:#fff;flex:none}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:16px;padding:0 20px;border-bottom:1px solid var(--edge2);min-height:58px}
+.tabs{display:flex;gap:4px;margin:0 auto}
+.tabs a{color:var(--faint);text-decoration:none;font-weight:500;padding:18px 12px 16px;border-bottom:2px solid transparent}
+.tabs a[aria-current=page]{color:var(--ink);border-color:var(--ink)}.tabs a:hover{color:var(--ink)}
+.chip{font-size:12.5px;color:var(--muted);border:1px solid var(--edge);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.out{font:500 13px var(--body);color:var(--muted);background:transparent;border:1px solid var(--edge);border-radius:999px;min-height:32px;padding:0 14px;cursor:pointer}
+.out:hover{color:var(--ink)}
+.sub{display:flex;align-items:center;gap:10px;padding:12px 24px;border-bottom:1px solid var(--edge2);flex-wrap:wrap}
+.sub h1{font:600 15px var(--body);margin:0 auto 0 0;display:flex;align-items:center;gap:10px}
+.sub h1 a{font-weight:400;color:var(--faint);font-size:13px}
+.seg{display:flex;gap:2px;background:var(--row);border-radius:9px;padding:3px}
+.seg a{font:500 12.5px var(--body);color:var(--muted);text-decoration:none;border-radius:7px;min-height:30px;padding:0 14px;display:grid;place-items:center}
+.seg a[aria-current=true]{background:rgba(255,255,255,.14);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.content{padding:20px 24px 28px;display:grid;gap:24px;align-content:start}
+
+.hero{position:relative;border-radius:14px;overflow:hidden;min-height:200px;padding:24px 26px;display:flex;flex-direction:column;justify-content:center;gap:6px;isolation:isolate;
+  background:linear-gradient(115deg,#2A1FB8 0%,#5B3FE0 38%,#B33FD0 72%,#E0568F 100%)}
+.hero .tag{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
+.hero .tag .mini{width:26px;height:26px;border-radius:7px;font-size:12px;border:1px solid rgba(255,255,255,.25)}
+.hero b.n{font:800 58px/1 var(--display);letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.hero p{margin:0;max-width:44ch;color:rgba(255,255,255,.85)}
+.hero .cta{margin-top:10px;align-self:flex-start;font:600 13px var(--body);color:#fff;background:#2F6BFF;border-radius:999px;min-height:34px;padding:0 18px;display:grid;place-items:center;text-decoration:none;box-shadow:0 8px 20px -8px rgba(47,107,255,.9)}
+.shape{position:absolute;z-index:-1;border-radius:50%}
+.s1{width:46px;height:46px;right:300px;top:26px;background:radial-gradient(circle at 30% 30%,#B9A8FF,#5B3FE0 60%,#2A1FB8)}
+.s2{width:22px;height:22px;right:200px;top:18px;background:radial-gradient(circle at 30% 30%,#E3D9FF,#7A5CFF)}
+.s3{width:34px;height:34px;right:330px;bottom:30px;border-radius:9px;transform:rotate(28deg);background:linear-gradient(135deg,#FF8FB8,#E0568F 60%,#A3236A)}
+.s4{width:26px;height:26px;right:180px;bottom:50px;border-radius:7px;transform:rotate(-18deg);background:linear-gradient(135deg,#FFB27A,#E0568F)}
+.s5{width:150px;height:150px;right:34px;top:24px;border-radius:38px;transform:rotate(-14deg);background:linear-gradient(145deg,rgba(255,255,255,.35),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(6px);display:grid;place-items:center;box-shadow:0 30px 60px -20px rgba(20,10,80,.6)}
+.s5 svg{width:96px;height:96px;transform:rotate(14deg);filter:drop-shadow(0 10px 18px rgba(0,0,0,.35))}
+
+.sec{display:grid;gap:10px}.sec>h2{font:500 12.5px var(--body);color:var(--faint);margin:0}
+.box{border-radius:12px;border:1px solid var(--edge2);background:var(--row)}
+.list{overflow:hidden}
+.item{display:grid;grid-template-columns:30px minmax(0,1fr) 150px 70px 104px;align-items:center;gap:14px;padding:10px 14px;border-top:1px solid var(--edge2)}
+.item:first-child{border-top:0}
+.item .mini{width:28px;height:28px;border-radius:7px;font-size:12px}
+.item b{font-weight:600}.item small{display:block;color:var(--faint);font-size:12px}
+.state{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}.state i{width:7px;height:7px;border-radius:50%;flex:none}
+.num{text-align:right;font:700 16px var(--display);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.pill{font:600 12.5px var(--body);color:var(--ink);text-decoration:none;border:1px solid rgba(255,255,255,.35);border-radius:999px;min-height:30px;padding:0 16px;display:grid;place-items:center;justify-self:end;white-space:nowrap}
+.pill:hover{background:var(--row)}.pill.solid{background:#2F6BFF;border-color:#2F6BFF}
+
+.chart{padding:14px 16px 8px}.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart text{font:11px var(--body);fill:var(--faint)}
 .hit:hover+.tip,.hit:focus+.tip{opacity:1}.tip{opacity:0;pointer-events:none;transition:opacity .15s}
-.tip rect{fill:var(--ink)}.tip text{fill:var(--base);font-weight:600}
-.facts{display:flex;flex-wrap:wrap;gap:8px 28px;padding-top:14px;border-top:1px solid var(--edge-soft);color:var(--muted);font-size:14px}
-.facts strong{color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:20px;letter-spacing:-.02em;margin-right:6px;font-variant-numeric:tabular-nums}
+.tip rect{fill:var(--ink)}.tip text{fill:#120C3A;font-weight:600}
 
-.split{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:20px;align-items:start}
-@media (max-width:940px){.split{grid-template-columns:minmax(0,1fr)}}
-.panel{border-radius:26px;padding:24px}
-h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:700;font-size:21px;letter-spacing:-.025em;margin:0 0 4px}
-.hint{color:var(--faint);font-size:13px;margin:0 0 16px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.card{padding:16px;display:flex;flex-direction:column;gap:6px;min-height:140px}
+.card .t{display:flex;align-items:center;gap:10px;font-weight:600;min-width:0}.card .t span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card p{margin:0;color:var(--muted);font-size:13px}
+.card .f{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card .f b{font:700 20px var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 
-.rank{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.post{display:grid;grid-template-columns:28px minmax(0,1.7fr) 110px minmax(70px,.7fr) 64px 104px;gap:14px;align-items:center;padding:12px 14px;border-radius:18px;background:var(--glass-strong);border:1px solid var(--edge-soft)}
-.post .pos{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:700;color:var(--faint);font-size:18px;text-align:center}
-.post .name b{display:block;font-weight:600;letter-spacing:-.01em}
-.post .name{min-width:0}.post .name small{display:block;font-size:12.5px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.post .name a{color:var(--accent);text-decoration:none;font-weight:500}.post .name a:hover{text-decoration:underline}
-.post .clicks{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:800;font-size:24px;letter-spacing:-.03em;text-align:right;font-variant-numeric:tabular-nums}
-.post .rate{text-align:right;font-size:13px;color:var(--muted);line-height:1.3}.post .rate b{display:block;color:var(--ink);font-size:15px}
-.mix{display:flex;height:8px;border-radius:99px;overflow:hidden;gap:2px;background:var(--track)}
-@media (max-width:720px){.post{grid-template-columns:22px minmax(0,1fr) auto;grid-template-areas:"pos name clicks" "pos mix mix" "pos rate rate";row-gap:10px}.post .pos{grid-area:pos;align-self:start}.post .name{grid-area:name}.post .clicks{grid-area:clicks}.post .mix,.post>.hint{grid-area:mix}.post .rate{grid-area:rate;text-align:left}.post .spark{display:none}.post .rate b{display:inline;margin-right:6px}}
+.split{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px}
+.bars{list-style:none;margin:0;padding:16px;display:grid;gap:12px}
+.bars li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;font-size:13.5px}
+.bars em{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
+.bars .track{grid-column:1/-1;height:6px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
+.bars .track i{display:block;height:100%;border-radius:99px}
+.devs{padding:16px;display:grid;gap:12px;align-content:start}
+.devs div{display:flex;align-items:baseline;gap:8px;color:var(--muted)}
+.devs strong{font:800 28px var(--display);letter-spacing:-.04em;color:var(--ink);font-variant-numeric:tabular-nums}
+.empty{padding:22px;color:var(--muted)}
+.hint{color:var(--faint);font-size:13px;margin:0}
 
-.donut{display:grid;place-items:center;margin:4px 0 18px;position:relative}
-.donut .c{position:absolute;text-align:center}.donut .c strong{display:block;font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:30px;font-weight:800;letter-spacing:-.04em}
-.donut .c span{font-size:12px;color:var(--faint)}
-.legend{list-style:none;margin:0;padding:0;display:grid;gap:9px}
-.legend li{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px}
-.legend i{width:10px;height:10px;border-radius:50%}.legend em{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
-.devices{display:flex;gap:10px;margin-top:18px}
-.dev{flex:1;border-radius:16px;padding:12px 14px;background:var(--glass-strong);border:1px solid var(--edge-soft)}
-.dev strong{display:block;font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:22px;letter-spacing:-.03em}.dev span{font-size:13px;color:var(--muted)}
-
-.tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}@media (max-width:940px){.tools{grid-template-columns:minmax(0,1fr)}}
-details.panel summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;font-weight:600;min-height:28px}
-details.panel summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--faint);border-bottom:2px solid var(--faint);transform:rotate(45deg) translateY(-3px);transition:transform .2s}
-details[open].panel summary::after{transform:rotate(225deg)}
-form.row{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-top:16px}label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
-input{font:inherit;color:var(--ink);background:var(--glass-strong);border:1px solid var(--edge-soft);border-radius:12px;padding:9px 12px;min-height:44px;min-width:0}
+.links{list-style:none;margin:0;padding:0}
+.link{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(80px,.8fr) 70px 130px;gap:14px;align-items:center;padding:12px 14px;border-top:1px solid var(--edge2)}
+.link:first-child{border-top:0}
+.link b{display:block;font-weight:600}.link small{display:block;font-size:12px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link small a{color:var(--menta);text-decoration:none}.link small a:hover{text-decoration:underline}
+.link .rate{text-align:right;font-size:12.5px;color:var(--muted);line-height:1.3}.link .rate b{color:var(--ink);font-size:14px}
+.mix{display:flex;height:6px;border-radius:99px;overflow:hidden;gap:2px;background:rgba(255,255,255,.06)}
+form.row{display:flex;flex-wrap:wrap;gap:12px;align-items:end;padding:16px}
+label{display:grid;gap:6px;font-size:12.5px;color:var(--muted)}
+input{font:inherit;color:var(--ink);background:rgba(255,255,255,.07);border:1px solid var(--edge);border-radius:10px;padding:8px 12px;min-height:40px;min-width:0}
 input::placeholder{color:var(--faint)}
-.btn{font:600 14px "Geist",system-ui,sans-serif;min-height:44px;padding:0 20px;border-radius:12px;border:0;background:linear-gradient(135deg,#3B2FD6,#5B4FF0);color:#fff;cursor:pointer;box-shadow:0 10px 24px -10px rgba(59,47,214,.8)}
+.btn{font:600 13.5px var(--body);min-height:40px;padding:0 20px;border-radius:999px;border:0;background:#2F6BFF;color:#fff;cursor:pointer}
 .btn[disabled],input[disabled]{opacity:.5;cursor:not-allowed}
-input:focus,button:focus-visible,a:focus-visible,summary:focus-visible,.hit:focus{outline:2px solid var(--accent);outline-offset:2px}
-.note{border-radius:20px;padding:14px 18px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;font-size:14px;color:var(--muted)}
-.note a{color:var(--accent);font-weight:600;text-decoration:none}.note a:hover{text-decoration:underline}
-.empty{padding:26px;text-align:center;color:var(--muted)}
-`;
+pre{margin:0;padding:14px 16px;overflow:auto;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:var(--muted);white-space:pre-wrap;word-break:break-all}
+.snip{display:grid;gap:8px}.snip h3{display:flex;align-items:center;gap:10px;font:600 14px var(--body);margin:0}
+.note{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;padding:12px 16px;font-size:13px;color:var(--muted)}
+.note a{color:var(--menta);font-weight:600;text-decoration:none}
 
-const MARK = `<svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="mk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B4FF0"/><stop offset="1" stop-color="#3B2FD6"/></linearGradient></defs><rect width="32" height="32" rx="10" fill="url(#mk)"/><path d="M11 8v11a5 5 0 0 0 10 0v-3" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="21" cy="12" r="2.6" fill="#5EEAD4"/></svg>`;
+@media (max-width:900px){.cards,.split{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){
+  .win{grid-template-columns:minmax(0,1fr);min-height:0}
+  .side{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--edge2);padding:10px 12px;gap:4px}
+  .side h4,.side .src{display:none}.side a{flex:none}.brand{padding:0 8px 0 4px}
+  .bar{padding:0 12px}.tabs{margin:0 auto 0 0}.tabs a{padding:16px 8px 14px}
+  .content{padding:16px}.sub{padding:12px 16px}
+}
+@media (max-width:700px){.item{grid-template-columns:30px minmax(0,1fr) auto auto;gap:10px}.item .state{display:none}.pill{padding:0 12px}.card{min-height:0}
+  .link{grid-template-columns:minmax(0,1fr) auto}.link .mix{grid-column:1/-1;grid-row:2}.link .rate{display:none}}
+@media (max-width:640px){.shape{display:none}.hero b.n{font-size:44px}.chart text{font-size:22px}.chip{display:none}}
+`;
 
 export const page = (title, body) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
 <title>${esc(title)}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Geist:wght@400;500;600&display=swap"><style>${STYLE}</style></head>
-<body><div class="sea" aria-hidden="true"><i></i><i></i><i></i></div><div class="wrap">${body}</div></body></html>`;
+<body><div class="desk">${body}</div></body></html>`;
 
-function delta(now, prev) {
-  if (!prev && !now) return `<span class="delta flat">igual que la semana anterior</span>`;
-  if (!prev) return `<span class="delta up">primera semana con clics</span>`;
-  const d = Math.round(((now - prev) / prev) * 100);
-  if (!d) return `<span class="delta flat">igual que la semana anterior</span>`;
-  return `<span class="delta ${d > 0 ? "up" : "down"}">${d > 0 ? "+" : "−"}${Math.abs(d)} % que la semana anterior</span>`;
-}
-
-/** Curva suave (Catmull-Rom → Bézier) para que la línea se lea como un hilo, no como picos. */
+/** Curva suave (Catmull-Rom a Bézier) para que la línea no se vea en picos. */
 function smooth(pts) {
-  let d = `M${pts[0][0]},${pts[0][1]}`;
+  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[i - 1] ?? pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] ?? p2;
     const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
-    d += ` C${c1[0].toFixed(1)},${Math.min(c1[1], 999).toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+    d += ` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
   }
   return d;
 }
 
-function lightChart(days, values) {
-  const W = 1000, H = 230, L = 6, R = 6, T = 20, B = 30, n = days.length;
+function chart(days, values) {
+  const W = 1000, H = 200, T = 20, B = 30, n = days.length, base = H - B;
   const max = Math.max(4, ...values) * 1.12;
-  const x = (i) => L + (i * (W - L - R)) / (n - 1), y = (v) => T + (H - T - B) * (1 - v / max);
-  const pts = values.map((v, i) => [x(i), Math.min(y(v), H - B)]);
-  const path = smooth(pts), base = H - B;
+  const x = (i) => 6 + (i * (W - 12)) / (n - 1), y = (v) => Math.min(T + (base - T) * (1 - v / max), base);
+  const pts = values.map((v, i) => [x(i), y(v)]), path = smooth(pts);
   const ticks = days.map((d, i) => ((i % 7 === 0 && n - 1 - i >= 4) || i === n - 1 ? `<text x="${x(i)}" y="${H - 6}" text-anchor="${i === 0 ? "start" : i === n - 1 ? "end" : "middle"}">${dayLabel(d)}</text>` : "")).join("");
-  const peak = values.indexOf(Math.max(...values)), last = n - 1;
+  const w = (W - 12) / (n - 1);
   const hits = days.map((d, i) => {
-    const tx = Math.min(Math.max(x(i) - 62, 0), W - 124), w = (W - L - R) / (n - 1);
-    return `<rect class="hit" x="${(x(i) - w / 2).toFixed(1)}" y="0" width="${w.toFixed(1)}" height="${base}" fill="transparent" tabindex="0" aria-label="${dayLabel(d)}: ${values[i]} clics"/>
-      <g class="tip"><line x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${base}" stroke="var(--faint)" stroke-dasharray="3 4"/><circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="5" fill="var(--line)"/><rect x="${tx}" y="-8" width="124" height="26" rx="13"/><text x="${tx + 62}" y="9" text-anchor="middle">${dayLabel(d)}, ${values[i]} clics</text></g>`;
+    const tx = Math.min(Math.max(x(i) - 66, 0), W - 132);
+    return `<rect class="hit" x="${(x(i) - w / 2).toFixed(1)}" y="0" width="${w.toFixed(1)}" height="${base}" fill="transparent" tabindex="0" aria-label="${dayLabel(d)}: ${values[i]} visitas"/>
+      <g class="tip"><line x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${base}" stroke="var(--faint)" stroke-dasharray="3 4"/><circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="5" fill="var(--menta)" stroke="#120C3A" stroke-width="2"/><rect x="${tx}" y="-10" width="132" height="26" rx="13"/><text x="${tx + 66}" y="7" text-anchor="middle">${dayLabel(d)}, ${values[i]} visitas</text></g>`;
   }).join("");
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Clics por día en los últimos ${n} días; máximo ${values[peak]} el ${dayLabel(days[peak])}">
-    <defs>
-      <linearGradient id="ln" x1="0" x2="1"><stop offset="0" stop-color="var(--line2)"/><stop offset="1" stop-color="var(--line)"/></linearGradient>
-      <linearGradient id="ar" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--line)" stop-opacity=".28"/><stop offset="1" stop-color="var(--line)" stop-opacity="0"/></linearGradient>
-      <filter id="glow" x="-5%" y="-30%" width="110%" height="160%"><feGaussianBlur stdDeviation="7"/></filter>
-    </defs>
-    <path d="${path} L${x(last)},${base} L${x(0)},${base} Z" fill="url(#ar)"/>
-    <path d="${path}" fill="none" stroke="url(#ln)" stroke-width="7" opacity=".55" filter="url(#glow)"/>
-    <path d="${path}" fill="none" stroke="url(#ln)" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="${pts[last][0]}" cy="${pts[last][1]}" r="11" fill="var(--line)" opacity=".25"/><circle cx="${pts[last][0]}" cy="${pts[last][1]}" r="5.5" fill="var(--line)"/>
+  const peak = values.indexOf(Math.max(...values));
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Visitas por día en los últimos ${n} días; el máximo fue ${values[peak]} el ${dayLabel(days[peak])}">
+    <defs><linearGradient id="ar" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5EEAD4" stop-opacity=".3"/><stop offset="1" stop-color="#5EEAD4" stop-opacity="0"/></linearGradient></defs>
+    <line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="rgba(255,255,255,.08)"/>
+    <path d="${path} L${x(n - 1)},${base} L${x(0)},${base} Z" fill="url(#ar)"/>
+    <path d="${path}" fill="none" stroke="var(--menta)" stroke-width="2.5" stroke-linecap="round"/>
     ${ticks}${hits}</svg>`;
 }
 
 function spark(values) {
-  const w = 110, h = 34, max = Math.max(1, ...values);
-  const pts = values.map((v, i) => [(i * w) / (values.length - 1), h - 5 - (v / max) * (h - 10)]);
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${smooth(pts)}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/></svg>`;
+  const w = 110, h = 30, max = Math.max(1, ...values);
+  const pts = values.map((v, i) => [(i * w) / (values.length - 1), h - 4 - (v / max) * (h - 8)]);
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${smooth(pts)}" fill="none" stroke="var(--menta)" stroke-width="2" stroke-linecap="round"/></svg>`;
 }
 
-function donut(sources, total) {
-  const r = 70, c = 2 * Math.PI * r, gap = sources.length > 1 ? 4 : 0;
-  let acc = 0;
-  const arcs = sources.map((s) => {
-    const len = (s.n / total) * c, arc = `<circle cx="90" cy="90" r="${r}" fill="none" stroke="${srcVar(s.source)}" stroke-width="18" stroke-dasharray="${Math.max(0.5, len - gap).toFixed(1)} ${c.toFixed(1)}" stroke-dashoffset="${(-acc).toFixed(1)}" transform="rotate(-90 90 90)"/>`;
-    acc += len; return arc;
-  }).join("");
-  return `<div class="donut"><svg width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="${esc(sources.map((s) => `${srcName(s.source)} ${s.n}`).join(", "))}"><circle cx="90" cy="90" r="${r}" fill="none" stroke="var(--track)" stroke-width="18"/>${arcs}</svg>
-    <div class="c"><strong>${fmt(total)}</strong><span>clics</span></div></div>`;
+const mix = (sources, total) => `<div class="mix" role="img" aria-label="${esc(sources.map((s) => `${srcName(s.source)} ${s.n}`).join(", "))}">${sources.map((s) => `<span style="flex:${s.n / total};background:${srcColor(s.source)}"></span>`).join("")}</div>`;
+
+const PERIOD = { 1: ["Hoy", "Hoy", "ayer"], 7: ["7 días", "Esta semana", "la semana anterior"], 30: ["30 días", "Últimos 30 días", "los 30 días anteriores"] };
+const TREND_DOT = { up: "var(--good)", flat: "var(--blue)", down: "var(--bad)", quiet: "var(--faint)" };
+
+/** Frase del banner: cuánto cambió y quién trajo más gente. */
+function headline(d) {
+  const parts = [];
+  if (d.delta == null) parts.push(d.total ? "Primeras visitas registradas." : "Todavía no hay visitas en este período.");
+  else if (d.delta === 0) parts.push(`Igual que ${PERIOD[d.period][2]}.`);
+  else parts.push(`${Math.abs(d.delta)} % ${d.delta > 0 ? "más" : "menos"} que ${PERIOD[d.period][2]}.`);
+  if (d.topSource && d.entries >= 5) {
+    const tenths = Math.round(d.topSource.share * 10);
+    parts.push(tenths >= 10 ? `Casi todas las entradas llegaron desde ${srcName(d.topSource.source)}.` : `${srcName(d.topSource.source)} trajo ${Math.max(1, tenths)} de cada 10 entradas.`);
+  }
+  return parts.join(" ");
 }
 
-const mix = (sources, total) => `<div class="mix" role="img" aria-label="${esc(sources.map((s) => `${srcName(s.source)} ${s.n}`).join(", "))}">${sources.map((s) => `<span style="flex:${s.n / total};background:${srcVar(s.source)}"></span>`).join("")}</div>`;
+/**
+ * El tablero. `d` sale de model(); `links` es la lista de links cortos.
+ * tab: "resumen" | "links" | "ajustes". Con `demo` todo queda de solo lectura.
+ */
+export function dashboard(d, { base = "", host = "", demo = false, tab = "resumen", links = [] } = {}) {
+  const root = base + (demo ? "/demo" : "/admin");
+  const href = (o = {}) => {
+    const p = new URLSearchParams();
+    const site = "site" in o ? o.site : d.site?.id, period = o.p ?? d.period, t = o.tab ?? (o.site !== undefined ? "resumen" : tab);
+    if (t !== "resumen") p.set("tab", t);
+    else { if (site) p.set("site", site); if (period !== 7) p.set("p", period); }
+    const s = p.toString();
+    return esc(root + (s ? "?" + s : ""));
+  };
+  const cur = (on) => (on ? ' aria-current="page"' : "");
+  const resumen = tab === "resumen";
 
-/** El tablero completo. `d` trae los números; con `demo` queda de solo lectura y con aviso. */
-export function dashboard(d, { base = "", host = "", demo = false } = {}) {
-  const P = (p) => base + p;
-  const totalSrc = d.sources.reduce((s, x) => s + x.n, 0);
+  const side = `<nav class="side" aria-label="Menú">
+    <a class="brand" href="${href({ site: null })}">${GANCHO()}Taplog</a>
+    <h4>Resumen</h4>
+    <a href="${href({ site: null })}"${cur(resumen && !d.site)}>${icon("grid")}Todos los sitios</a>
+    <h4>Sitios</h4>
+    ${d.sites.map((s) => `<a href="${href({ site: s.id })}"${cur(resumen && d.site?.id === s.id)}>${mini(s)}${esc(s.name)}<span class="count">${fmt(s.visits)}</span></a>`).join("")}
+    ${d.sources.length ? `<h4>De dónde vienen</h4>${d.sources.slice(0, 5).map((s) => `<span class="src">${icon(s.source)}${esc(srcName(s.source))}<span class="count">${fmt(s.n)}</span></span>`).join("")}` : ""}
+    <h4>Links cortos</h4>
+    <a href="${href({ tab: "links" })}"${cur(tab === "links")}>${icon("links")}Links por post</a>
+  </nav>`;
+
+  const bar = `<div class="bar">
+    <nav class="tabs" aria-label="Secciones"><a href="${href({ tab: "resumen", site: d.site?.id ?? null })}"${cur(resumen)}>Resumen</a><a href="${href({ tab: "links" })}"${cur(tab === "links")}>Links</a><a href="${href({ tab: "ajustes" })}"${cur(tab === "ajustes")}>Ajustes</a></nav>
+    ${demo ? '<span class="chip">Demo con datos de ejemplo</span>' : `<form method="post" action="${esc(base)}/admin/logout"><button class="out" type="submit">Salir</button></form>`}
+  </div>`;
+
+  const body = resumen ? resumenView(d, href) : tab === "links" ? linksView(links, { base, host, demo }) : ajustesView({ base, host });
+  return page(demo ? "Taplog, demo" : "Taplog", `<div class="win">${side}<div class="main">${bar}${body}</div></div>
+    ${demo ? `<div class="note box" style="margin-top:16px;backdrop-filter:blur(20px)"><span>Los números de esta demo son inventados. Taplog es uno de los proyectos de jotapol.</span><a href="https://jotapol.com" target="_blank" rel="noreferrer">Ver jotapol.com</a></div>` : ""}`);
+}
+
+function resumenView(d, href) {
+  const site = d.site;
+  const seg = `<div class="seg" role="group" aria-label="Período">${[1, 7, 30].map((p) => `<a href="${href({ p })}" aria-current="${d.period === p}">${PERIOD[p][0]}</a>`).join("")}</div>`;
+  const title = site ? `${mini(site)}${esc(site.name)} <a href="https://${esc(site.host)}" target="_blank" rel="noreferrer">${esc(site.host)}</a>` : "Todos los sitios";
+
+  const hero = `<section class="hero">
+    <span class="shape s1"></span><span class="shape s2"></span><span class="shape s3"></span><span class="shape s4"></span>
+    <span class="shape s5">${GANCHO()}</span>
+    <div class="tag">${site ? mini(site) : ""}${PERIOD[d.period][1]} en ${site ? esc(site.name) : "tus sitios"}</div>
+    <b class="n">${fmt(d.total)} ${d.total === 1 ? "visita" : "visitas"}</b>
+    <p>${esc(headline(d))}</p>
+    ${d.entries ? '<a class="cta" href="#origenes">Ver de dónde vienen</a>' : ""}
+  </section>`;
+
+  const sites = site ? "" : `<section class="sec"><h2>Tus sitios</h2><div class="box list">
+    ${[...d.sites].sort((a, b) => b.visits - a.visits).map((s) => {
+      const peak = s.prev > 0 && s.visits >= s.prev * 1.5;
+      return `<div class="item">${mini(s)}<div><b>${esc(s.name)}</b><small>${esc(s.note)}</small></div>
+        <span class="state"><i style="background:${TREND_DOT[s.trend.key]}"></i>${esc(s.trend.label)}</span><span class="num">${fmt(s.visits)}</span>
+        <a class="pill${peak ? " solid" : ""}" href="${href({ site: s.id })}" aria-label="Ver ${esc(s.name)}">${peak ? "Ver el pico" : "Ver"}</a></div>`;
+    }).join("")}</div></section>`;
+
+  const trendBox = `<section class="sec"><h2>Visitas por día, últimos 30 días</h2><div class="box chart">${chart(d.days30, d.series30)}</div></section>`;
+
+  const visitsOf = (s) => d.sites.find((x) => x.id === s.id)?.visits || 0;
+  const pages = `<section class="sec"><h2>Páginas más visitadas</h2>${d.pages.length ? `<div class="cards">${d.pages.map((p) => `<div class="box card">
+      <div class="t">${mini(p.site)}<span>${esc(site ? p.path : `${p.site.name} ${p.path}`)}</span></div>
+      <p>${visitsOf(p.site) ? `${Math.round((p.n / visitsOf(p.site)) * 100)} % de las visitas a ${esc(p.site.name)}` : esc(p.site.host)}</p>
+      <div class="f"><b>${fmt(p.n)}</b>${spark(p.spark)}</div></div>`).join("")}</div>` : '<div class="box empty">Cuando alguien abra una página, aparece aquí.</div>'}</section>`;
+
   const totalDev = d.devices.reduce((s, x) => s + x.n, 0) || 1;
-  const off = demo ? " disabled" : "";
-  const ranked = [...d.rows].sort((a, b) => b.clicks - a.clicks);
-  const list = ranked.length
-    ? `<ol class="rank">${ranked.map((r, i) => `<li class="post">
-        <span class="pos">${i + 1}</span>
-        <div class="name"><b>${esc(r.label || r.code)}</b><small><a href="${P("/" + esc(r.code))}" target="_blank" rel="noreferrer" title="${esc(host)}${esc(base)}/${esc(r.code)}">${esc(base)}/${esc(r.code)}</a> lleva a ${esc(r.targetShort)}</small></div>
-        <span class="spark">${spark(r.daily14)}</span>
-        ${r.clicks ? mix(r.sources, r.clicks) : '<span class="hint" style="margin:0">sin clics</span>'}
-        <span class="clicks">${fmt(r.clicks)}</span>
-        <span class="rate">${r.reach ? `<b>${pct(r.clicks, r.reach)}</b>de ${fmt(r.reach)} que lo vieron` : "sin alcance anotado"}</span>
-      </li>`).join("")}</ol>`
-    : `<div class="empty">Todavía no hay links. Creá el primero abajo, por ejemplo <b>09</b> para el post 09.</div>`;
+  const origins = `<section class="sec" id="origenes"><h2>De dónde vienen</h2><p class="hint">Solo cuentan las entradas desde fuera. Moverse dentro del sitio no suma.</p>
+    <div class="split"><div class="box">${d.sources.length ? `<ul class="bars">${d.sources.map((s) => `<li><span>${esc(srcName(s.source))}</span><em>${fmt(s.n)} (${Math.round((s.n / d.entries) * 100)} %)</em><span class="track"><i style="width:${((s.n / d.sources[0].n) * 100).toFixed(1)}%;background:${srcColor(s.source)}"></i></span></li>`).join("")}</ul>` : '<p class="empty">Sin entradas todavía.</p>'}</div>
+    <div class="box devs">${d.devices.map((s) => `<div><strong>${Math.round((s.n / totalDev) * 100)} %</strong>desde ${esc(s.device)}</div>`).join("") || '<p class="hint">Sin datos de dispositivos.</p>'}</div></div></section>`;
 
-  return page(demo ? "Taplog, demo" : "Taplog", `
-  <header class="top">
-    <a class="brand" href="${P(demo ? "/demo" : "/admin")}">${MARK}Taplog</a>
-    ${demo ? '<span class="chip glass"><b></b>Demo con datos de ejemplo</span>' : `<form method="post" action="${P("/admin/logout")}"><button class="btn-ghost glass" type="submit">Salir</button></form>`}
-  </header>
-
-  <section class="hero glass">
-    <div class="hero-head">
-      <div><h1>¿Qué post trae gente?</h1><p class="lede">Cada link corto cuenta quién lo toca y desde dónde, sin guardar datos de nadie.</p></div>
-      <div class="big"><div class="n">${fmt(d.week)}</div><div class="u">clics en los últimos 7 días</div>${delta(d.week, d.prevWeek)}</div>
-    </div>
-    <div class="chart">${lightChart(d.days30, d.daily30)}</div>
-    <div class="facts">
-      <span><strong>${fmt(d.total)}</strong>clics en total</span>
-      <span><strong>${d.rows.length}</strong>${d.rows.length === 1 ? "link" : "links"}</span>
-      <span><strong>${d.reach ? fmt(d.reach) : "–"}</strong>personas alcanzadas en Instagram</span>
-      <span><strong>${d.reach ? pct(d.total, d.reach) : "–"}</strong>del alcance se volvió visita</span>
-    </div>
-  </section>
-
-  <div class="split">
-    <section class="panel glass"><h2>Los posts que más traen</h2><p class="hint">El porcentaje es cuántas de las personas que vieron el post tocaron el link.</p>${list}</section>
-    <section class="panel glass"><h2>De dónde vienen</h2><p class="hint">Según la app desde la que abren el link.</p>
-      ${totalSrc ? donut(d.sources, totalSrc) : ""}
-      <ul class="legend">${d.sources.map((s) => `<li><i style="background:${srcVar(s.source)}"></i><span>${esc(srcName(s.source))}</span><em>${fmt(s.n)}, ${Math.round((s.n / totalSrc) * 100)} %</em></li>`).join("") || '<li class="hint">Sin clics todavía.</li>'}</ul>
-      <div class="devices">${d.devices.map((s) => `<div class="dev"><strong>${Math.round((s.n / totalDev) * 100)} %</strong><span>desde ${esc(s.device)}</span></div>`).join("")}</div>
-    </section>
-  </div>
-
-  <div class="tools">
-    <details class="panel glass"${demo ? "" : " open"}><summary>Crear o cambiar un link</summary>
-      <form class="row" method="post" action="${P("/admin/links")}">
-        <label>Código<input name="code" required pattern="[a-z0-9][a-z0-9-]{0,39}" placeholder="09" style="width:110px"${off}></label>
-        <label>Post<input name="label" placeholder="Shiplog v0.2.0" style="width:190px"${off}></label>
-        <label style="flex:1;min-width:220px">Lleva a<input name="target" type="url" required placeholder="https://github.com/jotapoldev/shiplog"${off}></label>
-        <button class="btn" type="submit"${off}>Guardar link</button>
-      </form></details>
-    <details class="panel glass"><summary>Anotar métricas de Instagram</summary>
-      <form class="row" method="post" action="${P("/admin/ig")}">
-        <label>Código<input name="code" required style="width:110px" list="codes"${off}></label>
-        ${["reach:Alcance", "saves:Guardados", "shares:Compartidos", "likes:Me gusta", "comments:Comentarios"].map((f) => { const [n, l] = f.split(":"); return `<label>${l}<input name="${n}" type="number" min="0" inputmode="numeric" style="width:104px"${off}></label>`; }).join("")}
-        <button class="btn" type="submit"${off}>Guardar métricas</button>
-        <datalist id="codes">${d.rows.map((r) => `<option value="${esc(r.code)}">${esc(r.label ?? "")}</option>`).join("")}</datalist>
-      </form></details>
-  </div>
-  ${demo ? `<div class="note glass"><span>Los números de esta demo son inventados. Taplog es parte de los proyectos de jotapol.</span><a href="https://jotapol.com" target="_blank" rel="noreferrer">Ver jotapol.com</a></div>` : ""}`);
+  return `<div class="sub"><h1>${title}</h1>${seg}</div><div class="content">${hero}${sites}${trendBox}${pages}${origins}</div>`;
 }
 
-export const login = (base, msg = "") => page("Entrar a Taplog", `<section class="panel glass" style="max-width:420px;width:100%;margin:16vh auto 0;padding:30px">
-  <div class="brand" style="margin-bottom:18px">${MARK}Taplog</div>
-  ${msg ? `<p style="color:var(--bad);margin:0 0 14px">${esc(msg)}</p>` : '<p class="hint" style="font-size:14px">Entrá con la clave del tablero.</p>'}
-  <form method="post" action="${base}/admin/login" style="display:grid;gap:14px"><label>Clave<input name="token" type="password" required autocomplete="current-password"></label><button class="btn" type="submit">Entrar</button></form>
-  <p class="hint" style="margin:18px 0 0">¿Solo querés ver cómo funciona? <a href="${base}/demo" style="color:var(--accent)">Abrí la demo</a>.</p></section>`);
+function linksView(links, { base, host, demo }) {
+  const off = demo ? " disabled" : "";
+  const ranked = [...links].sort((a, b) => b.clicks - a.clicks);
+  const list = ranked.length ? `<ul class="box links">${ranked.map((r) => `<li class="link">
+      <div style="min-width:0"><b>${esc(r.label || r.code)}</b><small><a href="${esc(base)}/${esc(r.code)}" target="_blank" rel="noreferrer">${esc(host)}${esc(base)}/${esc(r.code)}</a> lleva a ${esc(r.targetShort)}</small></div>
+      ${r.clicks ? mix(r.sources, r.clicks) : '<span class="hint">sin clics</span>'}
+      <span class="num">${fmt(r.clicks)}</span>
+      <span class="rate">${r.reach ? `<b>${pct(r.clicks, r.reach)}</b><br>de ${fmt(r.reach)} que lo vieron` : "sin alcance anotado"}</span>
+    </li>`).join("")}</ul>` : '<div class="box empty">Todavía no hay links. Creá el primero abajo, por ejemplo <b>09</b> para el post 09.</div>';
+  return `<div class="sub"><h1>Links cortos por post</h1></div><div class="content">
+    <p class="hint">Para cuando querés saber qué post exacto trajo la visita. El porcentaje es cuántas personas de las que vieron el post tocaron el link.</p>
+    ${list}
+    <section class="sec"><h2>Crear o cambiar un link</h2><form class="box row" method="post" action="${esc(base)}/admin/links">
+      <label>Código<input name="code" required pattern="[a-z0-9][a-z0-9-]{0,39}" placeholder="09" style="width:110px"${off}></label>
+      <label>Post<input name="label" placeholder="Shiplog v0.2.0" style="width:190px"${off}></label>
+      <label style="flex:1;min-width:220px">Lleva a<input name="target" type="url" required placeholder="https://shiplog.jotapol.com"${off}></label>
+      <button class="btn" type="submit"${off}>Guardar link</button></form></section>
+    <section class="sec"><h2>Anotar métricas de Instagram</h2><form class="box row" method="post" action="${esc(base)}/admin/ig">
+      <label>Código<input name="code" required style="width:110px" list="codes"${off}></label>
+      ${[["reach", "Alcance"], ["saves", "Guardados"], ["shares", "Compartidos"], ["likes", "Me gusta"], ["comments", "Comentarios"]].map(([n, l]) => `<label>${l}<input name="${n}" type="number" min="0" inputmode="numeric" style="width:104px"${off}></label>`).join("")}
+      <button class="btn" type="submit"${off}>Guardar métricas</button>
+      <datalist id="codes">${links.map((r) => `<option value="${esc(r.code)}">${esc(r.label ?? "")}</option>`).join("")}</datalist></form></section>
+  </div>`;
+}
 
-export const notFound = (home) => page("Este link no existe", `<section class="panel glass" style="max-width:520px;margin:20vh auto 0;text-align:center"><h1 style="margin:0 auto 10px">Este link no existe.</h1><p class="lede" style="margin:0 auto">Revisá que esté bien escrito o andá a <a href="${esc(home)}" style="color:var(--accent)">${esc(home.replace(/^https?:\/\//, ""))}</a>.</p></section>`);
+/** Fragmento que va en el <head> de cada sitio. Avisa una vez por página (también al navegar sin recargar). */
+export const snippet = (siteId, endpoint) => `<script>(()=>{let l;const h=()=>{const p=location.pathname;if(p===l)return;const r=l?location.origin+"/":document.referrer,q=l?"":location.search;l=p;navigator.sendBeacon("${endpoint}",JSON.stringify({s:"${siteId}",p,r,q}))},w=history.pushState;history.pushState=function(){w.apply(this,arguments);h()};addEventListener("popstate",h);h()})()</script>`;
+
+function ajustesView({ base, host }) {
+  const endpoint = `https://${host}${base}/hit`;
+  return `<div class="sub"><h1>Ajustes</h1></div><div class="content">
+    <p class="hint" style="max-width:70ch">Cada sitio lleva este fragmento en el &lt;head&gt;. Avisa qué página se abrió y desde dónde llegó la persona; no guarda IP ni nada que la identifique. Si el sitio tiene política de seguridad de contenido, agregá ${esc(`https://${host}`)} a connect-src.</p>
+    ${SITES.map((s) => `<section class="snip"><h3>${mini(s)}${esc(s.name)}</h3><pre class="box">${esc(snippet(s.id, endpoint))}</pre></section>`).join("")}
+    <p class="hint">Para saber qué post trajo la visita, agregá ?utm_source=post-09 al link del post. Ese nombre aparece tal cual en "De dónde vienen".</p>
+  </div>`;
+}
+
+export const login = (base, msg = "") => page("Entrar a Taplog", `<section class="win" style="max-width:400px;margin:14vh auto 0;display:block;min-height:0;padding:30px">
+  <div class="brand" style="padding:0 0 18px">${GANCHO()}Taplog</div>
+  ${msg ? `<p style="color:var(--bad);margin:0 0 14px">${esc(msg)}</p>` : '<p class="hint" style="margin:0 0 14px">Entrá con la clave del tablero.</p>'}
+  <form method="post" action="${esc(base)}/admin/login" style="display:grid;gap:14px"><label>Clave<input name="token" type="password" required autocomplete="current-password"></label><button class="btn" type="submit">Entrar</button></form>
+  <p class="hint" style="margin:18px 0 0">¿Solo querés ver cómo funciona? <a href="${esc(base)}/demo" style="color:var(--menta)">Abrí la demo</a>.</p></section>`);
+
+export const notFound = (home) => page("Este link no existe", `<section class="win" style="max-width:520px;margin:20vh auto 0;display:block;min-height:0;padding:30px;text-align:center"><h1 style="font:800 30px var(--display);letter-spacing:-.03em;margin:0 0 10px">Este link no existe.</h1><p style="margin:0;color:var(--muted)">Revisá que esté bien escrito o andá a <a href="${esc(home)}" style="color:var(--menta)">${esc(home.replace(/^https?:\/\//, ""))}</a>.</p></section>`);
