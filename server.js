@@ -11,6 +11,9 @@ const PORT = Number(process.env.PORT ?? 3300);
 const DATA = process.env.DATA_DIR ?? "./data";
 const TOKEN = process.env.ADMIN_TOKEN ?? "";
 const HOME = process.env.HOME_URL ?? "https://jotapol.com";
+// Prefijo cuando el servicio vive detrás de otra web (jotapol.com/r/09 → BASE_PATH=/r). Vacío si tiene dominio propio.
+const BASE = (process.env.BASE_PATH ?? "").replace(/\/+$/, "");
+const P = (p) => BASE + p;
 mkdirSync(DATA, { recursive: true });
 
 const db = new DatabaseSync(join(DATA, "go.db"));
@@ -93,7 +96,7 @@ function dashboard(host) {
     <thead><tr><th>Post</th><th>Link</th><th class="n">Clics</th><th>14 días</th><th>De dónde</th><th class="n">Alcance</th><th class="n">Guard.</th><th class="n">Comp.</th><th class="n">Clic / alcance</th></tr></thead><tbody>
     ${rows.map((r) => `<tr>
       <td><b>${esc(r.label || r.code)}</b><div class="muted mono" style="font-size:12px">${esc(new URL(r.target).hostname + new URL(r.target).pathname)}</div></td>
-      <td class="mono"><a href="/${esc(r.code)}" target="_blank" rel="noreferrer">${esc(host)}/${esc(r.code)}</a></td>
+      <td class="mono"><a href="${P("/" + esc(r.code))}" target="_blank" rel="noreferrer">${esc(host)}${BASE}/${esc(r.code)}</a></td>
       <td class="n"><b>${r.clicks}</b></td>
       <td>${spark(days, days.map((d) => daily.get(`${r.code}|${d}`) ?? 0))}</td>
       <td>${(srcByCode.get(r.code) ?? []).slice(0, 3).map((s) => `<span class="chip">${esc(s.source)} ${s.n}</span>`).join("") || '<span class="muted">sin clics</span>'}</td>
@@ -105,8 +108,8 @@ function dashboard(host) {
 
   return page("Alcance · jotapol", `
   <header style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
-    <div><div class="mono muted">${esc(host)}</div><h1>Alcance</h1></div>
-    <form method="post" action="/admin/logout"><button class="ghost" type="submit">Salir</button></form>
+    <div><div class="mono muted">${esc(host)}${BASE}</div><h1>Alcance</h1></div>
+    <form method="post" action="${P("/admin/logout")}"><button class="ghost" type="submit">Salir</button></form>
   </header>
   <section class="kpis">
     <div class="card kpi"><span class="muted">Clics totales</span><b>${total}</b></div>
@@ -117,7 +120,7 @@ function dashboard(host) {
   <section class="card"><h2>Por post</h2>${table}</section>
   <section class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">${breakdown("De dónde vienen", sources, "source")}${breakdown("Dispositivo", devices, "device")}</section>
   <section class="card"><h2>Nuevo link o cambiar uno</h2>
-    <form class="row" method="post" action="/admin/links">
+    <form class="row" method="post" action="${P("/admin/links")}">
       <label>Código<input name="code" required pattern="[a-z0-9][a-z0-9-]{0,39}" placeholder="09" class="mono" style="width:120px"></label>
       <label>Post<input name="label" placeholder="09 · Shiplog v0.2.0" style="width:220px"></label>
       <label style="flex:1;min-width:220px">Destino<input name="target" type="url" required placeholder="https://github.com/jotapoldev/shiplog"></label>
@@ -126,7 +129,7 @@ function dashboard(host) {
   </section>
   <section class="card"><h2>Métricas de Instagram del post</h2>
     <p class="muted" style="margin:0 0 12px">Copialas de "Ver estadísticas" en Instagram. Se guardan por código de link.</p>
-    <form class="row" method="post" action="/admin/ig">
+    <form class="row" method="post" action="${P("/admin/ig")}">
       <label>Código<input name="code" required class="mono" style="width:120px" list="codes"></label>
       ${["reach:Alcance", "saves:Guardados", "shares:Compartidos", "likes:Me gusta", "comments:Comentarios"].map((f) => { const [n, l] = f.split(":"); return `<label>${l}<input name="${n}" type="number" min="0" inputmode="numeric" style="width:110px"></label>`; }).join("")}
       <button type="submit">Guardar métricas</button>
@@ -137,14 +140,15 @@ function dashboard(host) {
 
 const login = (msg = "") => page("Entrar · alcance", `<section class="card" style="max-width:380px;margin:12vh auto 0"><h1 style="font-size:24px">Alcance</h1>
   ${msg ? `<p style="color:#D6364A">${esc(msg)}</p>` : '<p class="muted">Entrá con la clave del tablero (variable ADMIN_TOKEN).</p>'}
-  <form method="post" action="/admin/login" style="display:grid;gap:12px"><label>Clave<input name="token" type="password" required autocomplete="current-password"></label><button type="submit">Entrar</button></form></section>`);
+  <form method="post" action="${P("/admin/login")}" style="display:grid;gap:12px"><label>Clave<input name="token" type="password" required autocomplete="current-password"></label><button type="submit">Entrar</button></form></section>`);
 
 const notFound = () => page("No existe · jotapol", `<section style="text-align:center;margin-top:20vh"><h1>Este link no existe.</h1><p class="muted">Revisá que esté bien escrito o andá a <a href="${esc(HOME)}">${esc(HOME.replace(/^https?:\/\//, ""))}</a>.</p></section>`);
 
 // ---------- rutas ----------
 createServer(async (req, res) => {
   const url = new URL(req.url, "http://x");
-  const path = url.pathname.replace(/\/+$/, "") || "/";
+  let path = url.pathname.replace(/\/+$/, "") || "/";
+  if (BASE && (path === BASE || path.startsWith(BASE + "/"))) path = path.slice(BASE.length) || "/";
   const host = req.headers["x-forwarded-host"] ?? req.headers.host ?? "go.jotapol.com";
   try {
     if (path === "/") return redirect(res, HOME);
@@ -155,27 +159,27 @@ createServer(async (req, res) => {
       if (TOKEN.length < 12) return send(res, 500, login("Falta ADMIN_TOKEN (12 caracteres o más) en el servidor."));
       const t = Buffer.from(f.token ?? ""), k = Buffer.from(TOKEN);
       if (t.length !== k.length || !timingSafeEqual(t, k)) return send(res, 401, login("Clave incorrecta."));
-      res.setHeader("set-cookie", `t=${encodeURIComponent(TOKEN)}; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=Strict`);
-      return redirect(res, "/admin", 303);
+      res.setHeader("set-cookie", `t=${encodeURIComponent(TOKEN)}; Path=${BASE || "/"}; Max-Age=2592000; HttpOnly; Secure; SameSite=Strict`);
+      return redirect(res, P("/admin"), 303);
     }
     if (path.startsWith("/admin")) {
       if (!authed(req)) return send(res, 401, login());
       if (path === "/admin" && req.method === "GET") return send(res, 200, dashboard(host), { "cache-control": "no-store" });
       if (req.method !== "POST") return send(res, 405, notFound());
       const f = await form(req);
-      if (path === "/admin/logout") { res.setHeader("set-cookie", "t=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"); return redirect(res, "/admin", 303); }
+      if (path === "/admin/logout") { res.setHeader("set-cookie", `t=; Path=${BASE || "/"}; Max-Age=0; HttpOnly; Secure; SameSite=Strict`); return redirect(res, P("/admin"), 303); }
       if (path === "/admin/links") {
         const code = (f.code ?? "").trim().toLowerCase();
-        if (!validCode(code) || code === "admin" || code === "health") return send(res, 400, page("Error", `<p>El código "${esc(code)}" no sirve: usá minúsculas, números y guiones (por ejemplo 09 o reel-tradelearn). <a href="/admin">Volver</a></p>`));
-        if (!validTarget(f.target)) return send(res, 400, page("Error", `<p>El destino tiene que empezar con https:// o http://. <a href="/admin">Volver</a></p>`));
+        if (!validCode(code) || code === "admin" || code === "health") return send(res, 400, page("Error", `<p>El código "${esc(code)}" no sirve: usá minúsculas, números y guiones (por ejemplo 09 o reel-tradelearn). <a href="${P("/admin")}">Volver</a></p>`));
+        if (!validTarget(f.target)) return send(res, 400, page("Error", `<p>El destino tiene que empezar con https:// o http://. <a href="${P("/admin")}">Volver</a></p>`));
         q.upsertLink.run(code, f.target.trim(), (f.label ?? "").trim().slice(0, 120) || null);
-        return redirect(res, "/admin", 303);
+        return redirect(res, P("/admin"), 303);
       }
       if (path === "/admin/ig") {
         const code = (f.code ?? "").trim().toLowerCase();
-        if (!q.link.get(code)) return send(res, 400, page("Error", `<p>No hay un link con el código "${esc(code)}". Crealo primero. <a href="/admin">Volver</a></p>`));
+        if (!q.link.get(code)) return send(res, 400, page("Error", `<p>No hay un link con el código "${esc(code)}". Crealo primero. <a href="${P("/admin")}">Volver</a></p>`));
         q.upsertIg.run(code, int(f.reach), int(f.saves), int(f.shares), int(f.likes), int(f.comments));
-        return redirect(res, "/admin", 303);
+        return redirect(res, P("/admin"), 303);
       }
       return send(res, 404, notFound());
     }

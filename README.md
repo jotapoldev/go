@@ -1,6 +1,6 @@
 # jotapol-go
 
-Links cortos por post (`go.jotapol.com/09`) y un tablero para saber qué post o reel trae gente.
+Links cortos por post (`jotapol.com/r/09`) y un tablero para saber qué post o reel trae gente.
 
 - **Redirección:** `/<código>` manda al destino y cuenta el clic. Las previsualizaciones de links y los bots no cuentan.
 - **Privacidad:** de cada clic se guarda solo el día, la hora (UTC), el origen (Instagram, TikTok, LinkedIn… según el navegador que lo abre o el referer) y si fue celular o computadora. Nunca IP ni datos de la persona.
@@ -22,10 +22,11 @@ npm test
 | `ADMIN_TOKEN` | (obligatoria) | Clave del tablero, 12 caracteres o más |
 | `DATA_DIR` | `./data` | Dónde vive la base; en Railway, el volumen (`/data`) |
 | `PORT` | `3300` | |
-| `HOME_URL` | `https://jotapol.com` | A dónde va `go.jotapol.com/` sin código |
+| `HOME_URL` | `https://jotapol.com` | A dónde va la raíz sin código |
+| `BASE_PATH` | (vacío) | Prefijo cuando vive detrás de otra web. En producción `/r`: la web de jotapol.com (Caddy) le pasa `/r/*` a este servicio por la red interna de Railway |
 
 ## Cómo usarlo con los posts
 
 1. En `/admin`, creá un link por post: código `09`, destino el repo o la demo.
-2. Usá `go.jotapol.com/09` en la story (sticker de link), en la bio ese día o en el texto.
+2. Usá `jotapol.com/r/09` en la story (sticker de link), en la bio ese día o en el texto.
 3. Cuando el post tenga un par de días, copiá alcance, guardados y compartidos de Instagram al formulario del tablero.
