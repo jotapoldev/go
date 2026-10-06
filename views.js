@@ -42,9 +42,9 @@ body{font:14px/1.5 var(--body);color:var(--ink);-webkit-font-smoothing:antialias
   background:radial-gradient(120% 90% at 0% 0%,#2B3BD9 0%,transparent 55%),radial-gradient(90% 80% at 100% 10%,#7A2BC9 0%,transparent 55%),
     radial-gradient(80% 70% at 85% 100%,#C2306E 0%,transparent 60%),radial-gradient(70% 60% at 10% 100%,#0E7E86 0%,transparent 60%),#120C3A;
   background-attachment:fixed}
-.desk{max-width:1200px;margin:0 auto;padding:28px 16px 48px}
+.desk{padding:16px;min-height:100vh;display:flex;flex-direction:column;gap:16px}
 .win{border-radius:18px;background:var(--win);border:1px solid var(--edge);box-shadow:0 40px 100px -30px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.08);
-  backdrop-filter:blur(40px) saturate(1.6);-webkit-backdrop-filter:blur(40px) saturate(1.6);overflow:hidden;display:grid;grid-template-columns:224px minmax(0,1fr);min-height:720px}
+  backdrop-filter:blur(40px) saturate(1.6);-webkit-backdrop-filter:blur(40px) saturate(1.6);overflow:hidden;display:grid;grid-template-columns:240px minmax(0,1fr);flex:1}
 a{color:inherit}
 a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px solid var(--menta);outline-offset:2px}
 
@@ -107,7 +107,9 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .hit:hover+.tip,.hit:focus+.tip{opacity:1}.tip{opacity:0;pointer-events:none;transition:opacity .15s}
 .tip rect{fill:var(--ink)}.tip text{fill:#120C3A;font-weight:600}
 
-.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.duo{display:grid;gap:24px;align-items:start}.duo>.sec{min-width:0}
+@media (min-width:1400px){.duo{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.duo .split{grid-template-columns:minmax(0,1fr)}}
 .card{padding:16px;display:flex;flex-direction:column;gap:6px;min-height:140px}
 .card .t{display:flex;align-items:center;gap:10px;font-weight:600;min-width:0}.card .t span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card p{margin:0;color:var(--muted);font-size:13px}
@@ -252,7 +254,7 @@ export function dashboard(d, { base = "", host = "", demo = false, tab = "resume
 
   const body = resumen ? resumenView(d, href) : tab === "links" ? linksView(links, { base, host, demo }) : ajustesView({ base, host });
   return page(demo ? "Taplog, demo" : "Taplog", `<div class="win">${side}<div class="main">${bar}${body}</div></div>
-    ${demo ? `<div class="note box" style="margin-top:16px;backdrop-filter:blur(20px)"><span>Los números de esta demo son inventados. Taplog es uno de los proyectos de jotapol.</span><a href="https://jotapol.com" target="_blank" rel="noreferrer">Ver jotapol.com</a></div>` : ""}`);
+    ${demo ? `<div class="note box" style="backdrop-filter:blur(20px)"><span>Los números de esta demo son inventados. Taplog es uno de los proyectos de jotapol.</span><a href="https://jotapol.com" target="_blank" rel="noreferrer">Ver jotapol.com</a></div>` : ""}`);
 }
 
 function resumenView(d, href) {
@@ -290,7 +292,9 @@ function resumenView(d, href) {
     <div class="split"><div class="box">${d.sources.length ? `<ul class="bars">${d.sources.map((s) => `<li><span>${esc(srcName(s.source))}</span><em>${fmt(s.n)} (${Math.round((s.n / d.entries) * 100)} %)</em><span class="track"><i style="width:${((s.n / d.sources[0].n) * 100).toFixed(1)}%;background:${srcColor(s.source)}"></i></span></li>`).join("")}</ul>` : '<p class="empty">Sin entradas todavía.</p>'}</div>
     <div class="box devs">${d.devices.map((s) => `<div><strong>${Math.round((s.n / totalDev) * 100)} %</strong>desde ${esc(s.device)}</div>`).join("") || '<p class="hint">Sin datos de dispositivos.</p>'}</div></div></section>`;
 
-  return `<div class="sub"><h1>${title}</h1>${seg}</div><div class="content">${hero}${sites}${trendBox}${pages}${origins}</div>`;
+  // En pantallas anchas la gráfica va al lado de los sitios (o de los orígenes, viendo un solo sitio) para que no se estire.
+  const duo = site ? `<div class="duo">${trendBox}${origins}</div>${pages}` : `<div class="duo">${sites}${trendBox}</div>${pages}${origins}`;
+  return `<div class="sub"><h1>${title}</h1>${seg}</div><div class="content">${hero}${duo}</div>`;
 }
 
 function linksView(links, { base, host, demo }) {
