@@ -100,8 +100,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .content{padding:20px 24px 28px;display:grid;gap:24px;align-content:start}
 
 .hero{position:relative;border-radius:16px;overflow:hidden;min-height:210px;padding:26px 28px;display:flex;flex-direction:column;justify-content:center;gap:6px;isolation:isolate;border:1px solid rgba(255,255,255,.22);
-  background:linear-gradient(115deg,rgba(74,43,176,.6) 0%,rgba(120,48,170,.42) 55%,rgba(214,71,154,.4) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 24px 60px -28px rgba(20,10,60,.9)}
-.hero::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.02) 45%,rgba(255,255,255,.06));backdrop-filter:blur(22px) saturate(1.8);-webkit-backdrop-filter:blur(22px) saturate(1.8)}
+  background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.04) 50%,rgba(255,255,255,.09));box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 0 40px rgba(255,255,255,.05),0 24px 60px -28px rgba(10,6,30,.9);backdrop-filter:blur(24px) saturate(1.8);-webkit-backdrop-filter:blur(24px) saturate(1.8)}
 .hero>:not(.shape){position:relative;z-index:1}
 .hero .tag{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
 .hero .tag .mini{width:26px;height:26px;border-radius:7px;font-size:12px;border:1px solid rgba(255,255,255,.25)}
@@ -110,11 +109,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .hero .cta{margin-top:10px;align-self:flex-start;font:600 13px var(--body);color:#fff;background:#2F6BFF;border-radius:999px;min-height:34px;padding:0 18px;display:grid;place-items:center;text-decoration:none;box-shadow:0 8px 20px -8px rgba(47,107,255,.9)}
 .shape{position:absolute;z-index:-1;border-radius:50%}
 /* Figuras de color detrás del vidrio del banner: difuminadas para que se lean como luz a través del cristal. */
-.s1,.s2,.s3,.s4{filter:blur(16px);opacity:.9}
-.s1{width:150px;height:150px;right:250px;top:-30px;background:radial-gradient(circle at 30% 30%,#F08BC4,var(--orb-a) 60%,#8A2A78)}
-.s2{width:90px;height:90px;right:150px;bottom:-30px;background:radial-gradient(circle at 30% 30%,#E3D9FF,#8C6BFF)}
-.s3{width:110px;height:110px;right:420px;bottom:-40px;border-radius:9px;transform:rotate(28deg);background:linear-gradient(135deg,#B9A8FF,#6A4FE0 60%,var(--orb-b))}
-.s4{width:70px;height:70px;right:20px;top:-20px;border-radius:7px;transform:rotate(-18deg);background:linear-gradient(135deg,#FFC2E2,var(--orb-a))}
 .s5{width:150px;height:150px;right:40px;top:28px;z-index:1;border-radius:38px;transform:rotate(-14deg);background:linear-gradient(145deg,rgba(255,255,255,.4),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(10px) saturate(1.6);-webkit-backdrop-filter:blur(10px) saturate(1.6);display:grid;place-items:center;box-shadow:0 30px 60px -20px rgba(20,10,80,.7),inset 0 1px 0 rgba(255,255,255,.7)}
 .s5 svg{width:96px;height:96px;transform:rotate(14deg);filter:drop-shadow(0 10px 18px rgba(0,0,0,.35))}
 
@@ -302,7 +296,6 @@ function resumenView(d, href) {
   const title = site ? `${mini(site)}${esc(site.name)} <a href="https://${esc(site.host)}" target="_blank" rel="noreferrer">${esc(site.host)}</a>` : "Todos los sitios";
 
   const hero = `<section class="hero">
-    <span class="shape s1"></span><span class="shape s2"></span><span class="shape s3"></span><span class="shape s4"></span>
     <span class="shape s5">${GANCHO()}</span>
     <div class="tag">${site ? mini(site) : ""}${PERIOD[d.period][1]} en ${site ? esc(site.name) : "tus sitios"}</div>
     <b class="n">${fmt(d.total)} ${d.total === 1 ? "visita" : "visitas"}</b>
