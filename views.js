@@ -39,13 +39,13 @@ const STYLE = `
   --blue:#5B7CFF;--menta:#5EEAD4;--good:#2BC48A;--bad:#F0566E;color-scheme:dark}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%}
 body{font:14px/1.5 var(--body);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;
-  background:radial-gradient(120% 90% at 0% 0%,#2B3BD9 0%,transparent 55%),radial-gradient(90% 80% at 100% 10%,#7A2BC9 0%,transparent 55%),
-    radial-gradient(80% 70% at 85% 100%,#C2306E 0%,transparent 60%),radial-gradient(70% 60% at 10% 100%,#0E7E86 0%,transparent 60%),#120C3A;
+  background:radial-gradient(90% 70% at 0% 0%,rgba(59,47,214,.38) 0%,transparent 60%),radial-gradient(70% 60% at 100% 100%,rgba(94,234,212,.10) 0%,transparent 60%),
+    radial-gradient(60% 50% at 100% 0%,rgba(59,47,214,.18) 0%,transparent 60%),#0E0B2A;
   background-attachment:fixed}
 /* Orbes detrás de la ventana: sin algo que difuminar, el vidrio se ve plano. */
 body::before,body::after{content:"";position:fixed;z-index:-1;border-radius:50%;filter:blur(8px);pointer-events:none}
-body::before{width:420px;height:420px;left:18%;top:12%;background:radial-gradient(circle at 35% 35%,#7FA0FF,#3B2FD6 55%,transparent 72%);animation:drift 22s ease-in-out infinite alternate}
-body::after{width:360px;height:360px;right:12%;bottom:6%;background:radial-gradient(circle at 40% 40%,#FF9AC4,#C2306E 55%,transparent 72%);animation:drift 26s ease-in-out infinite alternate-reverse}
+body::before{width:420px;height:420px;left:18%;top:12%;opacity:.55;background:radial-gradient(circle at 35% 35%,#6A5CF5,#3B2FD6 55%,transparent 72%);animation:drift 22s ease-in-out infinite alternate}
+body::after{width:340px;height:340px;right:12%;bottom:6%;opacity:.28;background:radial-gradient(circle at 40% 40%,#5EEAD4,#0E9F92 55%,transparent 72%);animation:drift 26s ease-in-out infinite alternate-reverse}
 @keyframes drift{to{transform:translate(120px,80px) scale(1.15)}}
 @media (prefers-reduced-motion:reduce){body::before,body::after{animation:none}}
 .desk{padding:16px;min-height:100vh;display:flex;flex-direction:column;gap:16px}
