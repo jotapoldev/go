@@ -91,7 +91,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .content{padding:20px 24px 28px;display:grid;gap:24px;align-content:start}
 
 .hero{position:relative;border-radius:14px;overflow:hidden;min-height:200px;padding:24px 26px;display:flex;flex-direction:column;justify-content:center;gap:6px;isolation:isolate;
-  background:linear-gradient(115deg,#2A1FB8 0%,#5B3FE0 38%,#B33FD0 72%,#E0568F 100%)}
+  background:linear-gradient(115deg,#1E1880 0%,#3B2FD6 42%,#2F4FD8 72%,#0E8F86 100%)}
 .hero .tag{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
 .hero .tag .mini{width:26px;height:26px;border-radius:7px;font-size:12px;border:1px solid rgba(255,255,255,.25)}
 .hero b.n{font:800 58px/1 var(--display);letter-spacing:-.045em;font-variant-numeric:tabular-nums}
@@ -100,8 +100,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,.hit:focus{outline:2px 
 .shape{position:absolute;z-index:-1;border-radius:50%}
 .s1{width:46px;height:46px;right:300px;top:26px;background:radial-gradient(circle at 30% 30%,#B9A8FF,#5B3FE0 60%,#2A1FB8)}
 .s2{width:22px;height:22px;right:200px;top:18px;background:radial-gradient(circle at 30% 30%,#E3D9FF,#7A5CFF)}
-.s3{width:34px;height:34px;right:330px;bottom:30px;border-radius:9px;transform:rotate(28deg);background:linear-gradient(135deg,#FF8FB8,#E0568F 60%,#A3236A)}
-.s4{width:26px;height:26px;right:180px;bottom:50px;border-radius:7px;transform:rotate(-18deg);background:linear-gradient(135deg,#FFB27A,#E0568F)}
+.s3{width:34px;height:34px;right:330px;bottom:30px;border-radius:9px;transform:rotate(28deg);background:linear-gradient(135deg,#A7F5E8,#5EEAD4 60%,#0E9F92)}
+.s4{width:26px;height:26px;right:180px;bottom:50px;border-radius:7px;transform:rotate(-18deg);background:linear-gradient(135deg,#DCD8FF,#8C7BFF)}
 .s5{width:150px;height:150px;right:34px;top:24px;border-radius:38px;transform:rotate(-14deg);background:linear-gradient(145deg,rgba(255,255,255,.35),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(14px) saturate(1.6);-webkit-backdrop-filter:blur(14px) saturate(1.6);display:grid;place-items:center;box-shadow:0 30px 60px -20px rgba(20,10,80,.6),inset 0 1px 0 rgba(255,255,255,.55)}
 .s5 svg{width:96px;height:96px;transform:rotate(14deg);filter:drop-shadow(0 10px 18px rgba(0,0,0,.35))}
 
